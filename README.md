@@ -42,7 +42,7 @@
 - **QR코드 현장 입장 관리**: PWA 기반 모바일 앱
 - **다중 전시회 지원**: URL 경로별 독립 운영 (/aaa, /bbb, /ccc)
 
-#### 관리자 기능 (NEW 🆕)
+#### 관리자 기능 (NEW )
 - **슈퍼 관리자 시스템**: 전시회 생성, 담당자 관리, 전체 통계
 - **전시회 담당자 시스템**: 상품 관리, 주문 관리, 입장 관리
 - **권한 레벨 관리**: 1~9 단계 권한 체계
@@ -313,8 +313,8 @@ graph TB
 
 ### 1단계: 시스템 설계 & 구조 정의 ✅
 - [x] 전체 시스템 아키텍처 설계
-- [x] **다중 전시회 관리 플로우 설계** 🆕
-- [x] **권한 기반 접근 제어 시스템 설계** 🆕  
+- [x] **다중 전시회 관리 플로우 설계** 
+- [x] **권한 기반 접근 제어 시스템 설계**   
 - [x] 데이터베이스 스키마 설계 (권한 테이블 포함)
 - [x] API 엔드포인트 구조 설계
 - [x] 프론트엔드 페이지 구조 설계 (관리자 페이지 포함)
@@ -322,42 +322,42 @@ graph TB
 
 ### 2단계: 로컬 개발환경 구축 🔄
 - [ ] 프로젝트 디렉토리 구조 생성
-- [ ] **슈퍼 관리자 및 담당자 시스템 구조 생성** 🆕
+- [ ] **슈퍼 관리자 및 담당자 시스템 구조 생성** 
 - [ ] FastAPI 백엔드 기본 설정 (Native 환경)
 - [ ] Next.js 프론트엔드 기본 설정 (Native 환경)
 - [ ] PostgreSQL + Redis Native 설치
-- [ ] **권한 기반 미들웨어 기본 구현** 🆕
+- [ ] **권한 기반 미들웨어 기본 구현** 
 - [ ] 환경변수 및 설정 파일 구성
 
 ### 3단계: DB / Redis 구성 및 권한 시스템
 - [ ] PostgreSQL 데이터베이스 구축
-- [ ] **다중 관리자 테이블 스키마 적용** 🆕
+- [ ] **다중 관리자 테이블 스키마 적용** 
 - [ ] Redis 캐시 서버 구축
-- [ ] **권한 기반 데이터 접근 로직 구현** 🆕
+- [ ] **권한 기반 데이터 접근 로직 구현** 
 - [ ] 초기 데이터 및 테스트 데이터 생성
-- [ ] **슈퍼 관리자 계정 초기 생성** 🆕
+- [ ] **슈퍼 관리자 계정 초기 생성** 
 - [ ] 연결 테스트 및 검증
 
 ### 4단계: 백엔드 (FastAPI) 기능 구현
-- [ ] **권한 기반 인증 시스템 구현** 🆕
-- [ ] **슈퍼 관리자 API 구현** 🆕
-- [ ] **전시회 담당자 API 구현** 🆕
+- [ ] **권한 기반 인증 시스템 구현** 
+- [ ] **슈퍼 관리자 API 구현** 
+- [ ] **전시회 담당자 API 구현** 
 - [ ] 기본 CRUD API 구현
 - [ ] 예약 및 재고 관리 로직
 - [ ] 결제 API 연동
 - [ ] 알림 시스템 구현
-- [ ] **활동 로그 시스템 구현** 🆕
+- [ ] **활동 로그 시스템 구현** 
 
 ### 5단계: 프론트엔드 (Next.js) 화면 구성
-- [ ] **권한 기반 라우팅 시스템 구현** 🆕
-- [ ] **슈퍼 관리자 대시보드 구현** 🆕
-- [ ] **전시회 담당자 대시보드 구현** 🆕
+- [ ] **권한 기반 라우팅 시스템 구현** 
+- [ ] **슈퍼 관리자 대시보드 구현** 
+- [ ] **전시회 담당자 대시보드 구현** 
 - [ ] 기본 레이아웃 및 컴포넌트
 - [ ] 예약 페이지 구현
 - [ ] 결제 페이지 구현
 - [ ] PWA 입장 관리 앱
 
-### 6단계: 다중 전시회 관리 기능 완성 🆕
+### 6단계: 다중 전시회 관리 기능 완성 
 - [ ] **전시회 생성/수정/삭제 기능**
 - [ ] **담당자 계정 생성 및 권한 관리**
 - [ ] **전시회별 독립 상품 관리**
@@ -370,7 +370,7 @@ graph TB
 - [ ] 에러 핸들링 로직
 - [ ] 로딩/에러/토스트 컴포넌트
 - [ ] 로깅 및 모니터링
-- [ ] **권한별 메뉴 제어** 🆕
+- [ ] **권한별 메뉴 제어** 
 - [ ] 테스트 코드 작성
 
 ### 8단계: 예약 / 예매 / 대기열 로직 구현
@@ -383,7 +383,7 @@ graph TB
 ### 9단계: 테스트 & 로드 체크
 - [ ] 단위 테스트 작성
 - [ ] 통합 테스트 구현
-- [ ] **권한 시스템 테스트** 🆕
+- [ ] **권한 시스템 테스트** 
 - [ ] 성능 테스트 (부하 테스트)
 - [ ] 보안 테스트
 - [ ] 사용자 시나리오 테스트
@@ -393,13 +393,13 @@ graph TB
 - [ ] CI/CD 파이프라인 구축
 - [ ] SSL/TLS 인증서 적용
 - [ ] 방화벽 및 보안 설정
-- [ ] **권한 기반 보안 정책 적용** 🆕
+- [ ] **권한 기반 보안 정책 적용** 
 - [ ] 백업 및 모니터링 시스템
 
 ### 11단계: 운영모드 전환
 - [ ] 실운영 환경 배포
 - [ ] 모니터링 대시보드 구축
-- [ ] **관리자별 운영 매뉴얼 작성** 🆕
+- [ ] **관리자별 운영 매뉴얼 작성** 
 - [ ] 장애 대응 절차 수립
 - [ ] 성능 튜닝 및 최적화
 
@@ -418,14 +418,14 @@ graph TB
 └─────────────┴─────────────┴─────────────┴─────────────────────┘
                               │
 ┌─────────────────────────────────────────────────────────────┐
-│                  슈퍼 관리자 인터페이스 🆕                   │
+│                  슈퍼 관리자 인터페이스                    │
 ├─────────────┬─────────────┬─────────────┬─────────────────────┤
 │ 전시회 관리 │ 담당자 관리 │ 전체 통계   │ 시스템 설정         │
 │ (/super-admin/exhibitions) │ (/super-admin/stats) │         │
 └─────────────┴─────────────┴─────────────┴─────────────────────┘
                               │
 ┌─────────────────────────────────────────────────────────────┐
-│                 전시회 담당자 인터페이스 🆕                  │
+│                 전시회 담당자 인터페이스                   │
 ├─────────────┬─────────────┬─────────────┬─────────────────────┤
 │ 상품 관리   │ 주문 관리   │ 입장 관리   │ 전시회 통계         │
 │ (/admin/products) │ (/admin/orders) │ (/admin/entrance) │   │
@@ -433,13 +433,13 @@ graph TB
                               │
 ┌─────────────────────────────────────────────────────────────┐
 │                    API Gateway (nginx)                     │
-│                  - 권한 기반 라우팅 🆕                      │
+│                  - 권한 기반 라우팅                       │
 └─────────────────────────────────────────────────────────────┘
                               │
 ┌─────────────────────────────────────────────────────────────┐
 │                  FastAPI 백엔드 서버                       │
 ├─────────────┬─────────────┬─────────────┬─────────────────────┤
-│ 예약 API    │ 결제 API    │슈퍼관리자API│ 담당자 API 🆕       │
+│ 예약 API    │ 결제 API    │슈퍼관리자API│ 담당자 API        │
 │ 재고 관리   │ 웹훅 처리   │전시회 관리  │ 상품/주문 관리      │
 └─────────────┴─────────────┴─────────────┴─────────────────────┘
                               │
@@ -448,7 +448,7 @@ graph TB
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
 │ PostgreSQL  │    │    Redis    │    │ 외부 API    │
 │ (메인 DB)   │    │ (캐시/대기열)│   │ 토스/카카오 │
-│권한/활동로그│    │전시회별 재고│    │    🆕       │
+│권한/활동로그│    │전시회별 재고│    │           │
 └─────────────┘    └─────────────┘    └─────────────┘
 ```
 
@@ -456,32 +456,32 @@ graph TB
 
 #### Frontend (Next.js + React)
 - **일반 사용자 인터페이스**: 반응형 웹 디자인
-- **슈퍼 관리자 인터페이스** 🆕: 전시회 생성, 담당자 관리
-- **전시회 담당자 인터페이스** 🆕: 상품 관리, 주문 관리  
-- **권한 기반 라우팅** 🆕: PermissionGuard 컴포넌트
+- **슈퍼 관리자 인터페이스** : 전시회 생성, 담당자 관리
+- **전시회 담당자 인터페이스** : 상품 관리, 주문 관리  
+- **권한 기반 라우팅** : PermissionGuard 컴포넌트
 - **PWA 기능**: 오프라인 지원, 푸시 알림
 - **QR 스캔**: 카메라 API 활용 현장 입장 관리
 
 #### Backend (FastAPI)
 - **API 서버**: RESTful API 제공
-- **권한 미들웨어** 🆕: JWT + 권한 레벨 검증
-- **다중 전시회 로직** 🆕: 전시회별 데이터 격리
+- **권한 미들웨어** : JWT + 권한 레벨 검증
+- **다중 전시회 로직** : 전시회별 데이터 격리
 - **비즈니스 로직**: 예약, 결제, 재고 관리
 - **외부 연동**: 결제, 알림 API 통합
-- **활동 로그** 🆕: 모든 관리자 활동 추적
+- **활동 로그** : 모든 관리자 활동 추적
 
 #### Database (PostgreSQL)
-- **사용자 데이터**: 슈퍼 관리자, 전시회 담당자 🆕
-- **전시회 데이터**: 다중 전시회 관리 🆕
-- **권한 데이터**: 권한 레벨, 접근 제어 🆕
-- **활동 로그**: 관리자 활동 추적 🆕
+- **사용자 데이터**: 슈퍼 관리자, 전시회 담당자 
+- **전시회 데이터**: 다중 전시회 관리 
+- **권한 데이터**: 권한 레벨, 접근 제어 
+- **활동 로그**: 관리자 활동 추적 
 - **주문 데이터**: 주문, 상품, 결제 정보
 - **관계형 데이터**: 정규화된 스키마
 
 #### Cache (Redis)
-- **전시회별 세션**: 사용자 대기열 상태 🆕
-- **전시회별 재고**: 빠른 재고 조회/차감 🆕
-- **권한 캐시**: JWT 토큰 검증 캐시 🆕
+- **전시회별 세션**: 사용자 대기열 상태 
+- **전시회별 재고**: 빠른 재고 조회/차감 
+- **권한 캐시**: JWT 토큰 검증 캐시 
 - **임시 데이터**: 결제 진행 중 데이터
 
 ---
@@ -490,7 +490,7 @@ graph TB
 
 ### 핵심 테이블 구조 (다중 관리자 지원)
 
-#### 1. 슈퍼 관리자 (super_admins) 🆕
+#### 1. 슈퍼 관리자 (super_admins) 
 ```sql
 CREATE TABLE super_admins (
     id SERIAL PRIMARY KEY,
@@ -518,14 +518,14 @@ CREATE TABLE exhibitions (
     code VARCHAR(50) UNIQUE NOT NULL,           -- 전시회 코드 (aaa, bbb)
     name VARCHAR(200) NOT NULL,                 -- 전시회 명
     description TEXT,                           -- 설명
-    thumbnail_image VARCHAR(500),               -- 대표 이미지 URL 🆕
+    thumbnail_image VARCHAR(500),               -- 대표 이미지 URL 
     start_date DATE NOT NULL,                   -- 시작일
     end_date DATE NOT NULL,                     -- 종료일
     venue VARCHAR(200),                         -- 장소
-    created_by INTEGER REFERENCES super_admins(id), -- 생성한 슈퍼관리자 🆕
-    manager_id INTEGER REFERENCES admin_users(id),  -- 담당 관리자 🆕
+    created_by INTEGER REFERENCES super_admins(id), -- 생성한 슈퍼관리자 
+    manager_id INTEGER REFERENCES admin_users(id),  -- 담당 관리자 
     is_active BOOLEAN DEFAULT true,             -- 활성 상태
-    is_deleted CHAR(1) DEFAULT 'N',             -- 삭제 상태 (Y/N) 🆕
+    is_deleted CHAR(1) DEFAULT 'N',             -- 삭제 상태 (Y/N) 
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -537,28 +537,28 @@ CREATE INDEX idx_exhibitions_created_by ON exhibitions(created_by);
 CREATE INDEX idx_exhibitions_active ON exhibitions(is_active, is_deleted);
 ```
 
-#### 3. 전시회 담당자 (admin_users) - 권한 체계 보완 🆕
+#### 3. 전시회 담당자 (admin_users) - 권한 체계 보완 
 ```sql
 CREATE TABLE admin_users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(100) UNIQUE NOT NULL,      -- 관리자 아이디
     password_hash VARCHAR(255) NOT NULL,        -- 비밀번호 해시
-    name VARCHAR(100) NOT NULL,                 -- 실명 🆕
-    email VARCHAR(200),                         -- 이메일 🆕
-    phone VARCHAR(20),                          -- 연락처 🆕
+    name VARCHAR(100) NOT NULL,                 -- 실명 
+    email VARCHAR(200),                         -- 이메일 
+    phone VARCHAR(20),                          -- 연락처 
     exhibition_id INTEGER REFERENCES exhibitions(id), -- 담당 전시회 (NULL이면 전체)
     role VARCHAR(50) DEFAULT 'exhibition_manager', -- 역할
-    permission_level INTEGER DEFAULT 3,        -- 권한 레벨 🆕
+    permission_level INTEGER DEFAULT 3,        -- 권한 레벨 
     /*
-    권한 레벨 정의 🆕:
+    권한 레벨 정의 :
     1: 조회 전용 (Viewer) - 통계, 주문내역 조회만
     2: 일반 관리자 (Staff) - 상품 등록/수정, 주문내역 조회
     3: 전시회 담당자 (Exhibition Manager) - 전시회 전체 관리
     9: 슈퍼 관리자 (Super Admin) - 시스템 전체 관리
     */
-    assigned_by INTEGER REFERENCES super_admins(id), -- 배정한 슈퍼관리자 🆕
+    assigned_by INTEGER REFERENCES super_admins(id), -- 배정한 슈퍼관리자 
     is_active BOOLEAN DEFAULT true,             -- 활성 상태
-    is_deleted CHAR(1) DEFAULT 'N',             -- 삭제 상태 (Y/N) 🆕
+    is_deleted CHAR(1) DEFAULT 'N',             -- 삭제 상태 (Y/N) 
     last_login TIMESTAMP,                       -- 마지막 로그인
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
@@ -578,14 +578,14 @@ CREATE TABLE products (
     exhibition_id INTEGER REFERENCES exhibitions(id),
     name VARCHAR(200) NOT NULL,                 -- 상품명
     type VARCHAR(50) NOT NULL,                  -- 대인/소인
-    base_price INTEGER NOT NULL,                -- 기본 가격 🆕
+    base_price INTEGER NOT NULL,                -- 기본 가격 
     total_quantity INTEGER NOT NULL,            -- 총 수량
     available_quantity INTEGER NOT NULL,        -- 잔여 수량
     sale_start TIMESTAMP,                       -- 판매 시작
     sale_end TIMESTAMP,                         -- 판매 종료
-    created_by INTEGER REFERENCES admin_users(id), -- 등록한 관리자 🆕
+    created_by INTEGER REFERENCES admin_users(id), -- 등록한 관리자 
     is_active BOOLEAN DEFAULT true,
-    is_deleted CHAR(1) DEFAULT 'N',             -- 삭제 상태 (Y/N) 🆕
+    is_deleted CHAR(1) DEFAULT 'N',             -- 삭제 상태 (Y/N) 
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -597,7 +597,7 @@ CREATE INDEX idx_products_active ON products(is_active, is_deleted);
 CREATE INDEX idx_products_sale_period ON products(sale_start, sale_end);
 ```
 
-#### 5. 상품 옵션 관리 (product_options) 🆕
+#### 5. 상품 옵션 관리 (product_options) 
 ```sql
 CREATE TABLE product_options (
     id SERIAL PRIMARY KEY,
@@ -617,7 +617,7 @@ CREATE INDEX idx_product_options_product ON product_options(product_id);
 CREATE INDEX idx_product_options_active ON product_options(is_active, is_deleted);
 ```
 
-#### 6. 주문 관리 (orders) - 입장 관리자 추가
+#### 6. 주문 관리 (orders) - 입장 주문내역
 ```sql
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
@@ -635,8 +635,8 @@ CREATE TABLE orders (
     qr_code VARCHAR(500),                      -- QR 코드
     entrance_checked BOOLEAN DEFAULT false,     -- 입장 확인
     entrance_time TIMESTAMP,                   -- 입장 시간
-    entrance_checked_by INTEGER REFERENCES admin_users(id), -- 입장 처리 관리자 🆕
-    is_deleted CHAR(1) DEFAULT 'N',             -- 삭제 상태 (Y/N) 🆕
+    entrance_checked_by INTEGER REFERENCES admin_users(id), -- 입장 처리 관리자 
+    is_deleted CHAR(1) DEFAULT 'N',             -- 삭제 상태 (Y/N) 
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -656,11 +656,11 @@ CREATE TABLE order_items (
     id SERIAL PRIMARY KEY,
     order_id INTEGER REFERENCES orders(id),
     product_id INTEGER REFERENCES products(id),
-    product_option_id INTEGER REFERENCES product_options(id), -- 선택된 옵션 🆕
+    product_option_id INTEGER REFERENCES product_options(id), -- 선택된 옵션 
     quantity INTEGER NOT NULL,                  -- 수량
-    unit_price INTEGER NOT NULL,               -- 단가 (옵션 포함) 🆕
+    unit_price INTEGER NOT NULL,               -- 단가 (옵션 포함) 
     total_price INTEGER NOT NULL,              -- 소계
-    is_deleted CHAR(1) DEFAULT 'N',             -- 삭제 상태 (Y/N) 🆕
+    is_deleted CHAR(1) DEFAULT 'N',             -- 삭제 상태 (Y/N) 
     created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -670,7 +670,7 @@ CREATE INDEX idx_order_items_product ON order_items(product_id);
 CREATE INDEX idx_order_items_option ON order_items(product_option_id);
 ```
 
-#### 8. 공지사항 (notices) 🆕
+#### 8. 공지사항 (notices) 
 ```sql
 CREATE TABLE notices (
     id SERIAL PRIMARY KEY,
@@ -692,7 +692,7 @@ CREATE INDEX idx_notices_active ON notices(is_active, is_deleted);
 CREATE INDEX idx_notices_important ON notices(is_important);
 ```
 
-#### 9. 공지사항 첨부파일 (notice_attachments) 🆕
+#### 9. 공지사항 첨부파일 (notice_attachments) 
 ```sql
 CREATE TABLE notice_attachments (
     id SERIAL PRIMARY KEY,
@@ -711,7 +711,7 @@ CREATE INDEX idx_notice_attachments_notice ON notice_attachments(notice_id);
 CREATE INDEX idx_notice_attachments_active ON notice_attachments(is_deleted);
 ```
 
-#### 10. 관리자 활동 로그 (admin_activity_logs) 🆕
+#### 10. 관리자 활동 로그 (admin_activity_logs) 
 ```sql
 CREATE TABLE admin_activity_logs (
     id SERIAL PRIMARY KEY,
@@ -1052,7 +1052,7 @@ async def create_product(
 
 ```
 /api/
-├── super/              # 슈퍼 관리자 전용 API 🆕
+├── super/              # 슈퍼 관리자 전용 API 
 │   ├── auth/           # 인증
 │   ├── exhibitions/    # 전시회 관리
 │   ├── managers/       # 담당자 관리
@@ -1065,7 +1065,7 @@ async def create_product(
 │   ├── products/       # 상품 관리
 │   ├── orders/         # 주문 관리
 │   ├── entrance/       # 입장 관리
-│   ├── notices/        # 공지사항 관리 🆕
+│   ├── notices/        # 공지사항 관리 
 │   └── dashboard/      # 담당 전시회 대시보드
 ├── exhibitions/        # 일반 사용자 API
 │   └── {code}/         # 전시회별 API
@@ -1074,7 +1074,7 @@ async def create_product(
 └── entrance/           # 입장 관리 API
 ```
 
-### 슈퍼 관리자 API 🆕
+### 슈퍼 관리자 API 
 
 #### 인증 API
 ```http
@@ -1621,7 +1621,7 @@ Response 200:
 }
 ```
 
-#### 공지사항 관리 API 🆕
+#### 공지사항 관리 API 
 ```http
 # 공지사항 목록 조회
 GET /api/admin/notices?page=1&limit=10
@@ -1861,7 +1861,7 @@ exhibition-frontend/
 │   │   │   │   └── page.js     # 결제 페이지
 │   │   │   └── complete/       
 │   │   │       └── page.js     # 결제 완료
-│   │   ├── super-admin/        # 🆕 슈퍼 관리자 전용
+│   │   ├── super-admin/        #  슈퍼 관리자 전용
 │   │   │   ├── login/page.js   # 슈퍼관리자 로그인
 │   │   │   ├── layout.js       # 슈퍼관리자 레이아웃
 │   │   │   ├── dashboard/page.js # 전체 시스템 대시보드
@@ -1907,7 +1907,7 @@ exhibition-frontend/
 │   │   │   │   ├── page.js     # QR 스캔 페이지
 │   │   │   │   ├── scan/page.js # QR 스캔 화면
 │   │   │   │   └── stats/page.js # 입장 통계
-│   │   │   ├── notices/        # 🆕 공지사항 관리
+│   │   │   ├── notices/        #  공지사항 관리
 │   │   │   │   ├── page.js     # 공지사항 목록
 │   │   │   │   ├── create/page.js # 공지사항 작성
 │   │   │   │   └── [id]/
@@ -1934,11 +1934,11 @@ exhibition-frontend/
 │   │   │   ├── Pagination.js
 │   │   │   ├── SearchBox.js
 │   │   │   ├── DatePicker.js
-│   │   │   ├── FileUpload.js      # 🆕 파일 업로드
-│   │   │   └── PermissionGuard.js # 🆕 권한 확인 컴포넌트
+│   │   │   ├── FileUpload.js      #  파일 업로드
+│   │   │   └── PermissionGuard.js #  권한 확인 컴포넌트
 │   │   ├── booking/            # 예약 관련
 │   │   │   ├── ProductCard.js
-│   │   │   ├── ProductOption.js   # 🆕 상품 옵션 선택
+│   │   │   ├── ProductOption.js   #  상품 옵션 선택
 │   │   │   ├── QuantitySelector.js
 │   │   │   ├── CartSummary.js
 │   │   │   └── VisitDatePicker.js
@@ -1947,7 +1947,7 @@ exhibition-frontend/
 │   │   │   ├── PaymentForm.js
 │   │   │   ├── PaymentResult.js
 │   │   │   └── QRCodeDisplay.js
-│   │   ├── super-admin/        # 🆕 슈퍼관리자 컴포넌트
+│   │   ├── super-admin/        #  슈퍼관리자 컴포넌트
 │   │   │   ├── ExhibitionForm.js  # 전시회 생성/수정 폼
 │   │   │   ├── ExhibitionCard.js  # 전시회 카드
 │   │   │   ├── ManagerForm.js     # 담당자 생성/수정 폼
@@ -1959,12 +1959,12 @@ exhibition-frontend/
 │   │   ├── admin/              # 담당자 관리 컴포넌트
 │   │   │   ├── ProductForm.js     # 상품 등록/수정 폼
 │   │   │   ├── ProductCard.js     # 상품 카드
-│   │   │   ├── ProductOption.js   # 🆕 상품 옵션 관리
+│   │   │   ├── ProductOption.js   #  상품 옵션 관리
 │   │   │   ├── OrderTable.js      # 주문 테이블
 │   │   │   ├── OrderDetail.js     # 주문 상세
 │   │   │   ├── OrderStatus.js     # 주문 상태 관리
-│   │   │   ├── NoticeForm.js      # 🆕 공지사항 작성 폼
-│   │   │   ├── NoticeList.js      # 🆕 공지사항 목록
+│   │   │   ├── NoticeForm.js      #  공지사항 작성 폼
+│   │   │   ├── NoticeList.js      #  공지사항 목록
 │   │   │   ├── ExhibitionStats.js # 전시회 통계
 │   │   │   ├── SalesChart.js      # 매출 차트
 │   │   │   ├── VisitorChart.js    # 방문자 차트
@@ -1977,36 +1977,36 @@ exhibition-frontend/
 │   │       ├── EntranceStats.js   # 입장 통계
 │   │       └── PWAInstallPrompt.js # PWA 설치 안내
 │   ├── hooks/                  # 커스텀 훅
-│   │   ├── useAuth.js          # 인증 관리 (권한별) 🆕
-│   │   ├── usePermission.js    # 🆕 권한 확인
-│   │   ├── useSuperAdmin.js    # 🆕 슈퍼관리자 전용 훅
-│   │   ├── useAdminManager.js  # 🆕 담당자 관리 훅
-│   │   ├── useExhibition.js    # 🆕 전시회 관리 훅
-│   │   ├── useProduct.js       # 🆕 상품 관리 훅
-│   │   ├── useOrder.js         # 🆕 주문 관리 훅
-│   │   ├── useNotice.js        # 🆕 공지사항 관리 훅
+│   │   ├── useAuth.js          # 인증 관리 (권한별) 
+│   │   ├── usePermission.js    #  권한 확인
+│   │   ├── useSuperAdmin.js    #  슈퍼관리자 전용 훅
+│   │   ├── useAdminManager.js  #  담당자 관리 훅
+│   │   ├── useExhibition.js    #  전시회 관리 훅
+│   │   ├── useProduct.js       #  상품 관리 훅
+│   │   ├── useOrder.js         #  주문 관리 훅
+│   │   ├── useNotice.js        #  공지사항 관리 훅
 │   │   ├── useQueue.js         # 대기열 관리
 │   │   ├── usePayment.js       # 결제 처리
 │   │   ├── useQRScanner.js     # QR 스캔
 │   │   ├── useLocalStorage.js  # 로컬 스토리지
-│   │   ├── useFileUpload.js    # 🆕 파일 업로드
-│   │   └── useActivityLog.js   # 🆕 활동 로그
+│   │   ├── useFileUpload.js    #  파일 업로드
+│   │   └── useActivityLog.js   #  활동 로그
 │   ├── services/               # API 서비스
 │   │   ├── api.js              # API 클라이언트
-│   │   ├── superAdmin.js       # 🆕 슈퍼관리자 API
+│   │   ├── superAdmin.js       #  슈퍼관리자 API
 │   │   ├── admin.js            # 담당자 API
-│   │   ├── exhibition.js       # 🆕 전시회 API
-│   │   ├── product.js          # 🆕 상품 API
-│   │   ├── order.js            # 🆕 주문 API
-│   │   ├── notice.js           # 🆕 공지사항 API
+│   │   ├── exhibition.js       #  전시회 API
+│   │   ├── product.js          #  상품 API
+│   │   ├── order.js            #  주문 API
+│   │   ├── notice.js           #  공지사항 API
 │   │   ├── booking.js          # 예약 API
 │   │   ├── payment.js          # 결제 API
 │   │   ├── entrance.js         # 입장 API
-│   │   └── upload.js           # 🆕 파일 업로드 API
-│   ├── middleware/             # 🆕 미들웨어
+│   │   └── upload.js           #  파일 업로드 API
+│   ├── middleware/             #  미들웨어
 │   │   ├── auth.js             # 인증 미들웨어
 │   │   └── permission.js       # 권한 검증 미들웨어
-│   ├── context/                # 🆕 React Context
+│   ├── context/                #  React Context
 │   │   ├── AuthContext.js      # 인증 컨텍스트
 │   │   ├── PermissionContext.js # 권한 컨텍스트
 │   │   └── ThemeContext.js     # 테마 컨텍스트
@@ -2015,16 +2015,16 @@ exhibition-frontend/
 │   │   ├── helpers.js          # 헬퍼 함수
 │   │   ├── validation.js       # 검증 로직
 │   │   ├── formatting.js       # 포맷팅
-│   │   ├── permissions.js      # 🆕 권한 관련 유틸
+│   │   ├── permissions.js      #  권한 관련 유틸
 │   │   ├── dateUtils.js        # 날짜 유틸
-│   │   ├── fileUtils.js        # 🆕 파일 유틸
-│   │   └── chartUtils.js       # 🆕 차트 유틸
+│   │   ├── fileUtils.js        #  파일 유틸
+│   │   └── chartUtils.js       #  차트 유틸
 │   └── styles/                 # SCSS 스타일
 │       ├── globals.scss
 │       ├── variables.scss      # SCSS 변수
 │       ├── mixins.scss         # SCSS 믹스인
 │       ├── reset.scss          # CSS 리셋
-│       ├── super-admin/        # 🆕 슈퍼관리자 스타일
+│       ├── super-admin/        #  슈퍼관리자 스타일
 │       │   ├── layout.scss
 │       │   ├── dashboard.scss
 │       │   ├── exhibitions.scss
@@ -2036,7 +2036,7 @@ exhibition-frontend/
 │       │   ├── products.scss
 │       │   ├── orders.scss
 │       │   ├── entrance.scss
-│       │   └── notices.scss    # 🆕 공지사항 스타일
+│       │   └── notices.scss    #  공지사항 스타일
 │       └── components/
 │           ├── common.scss     # 공통 컴포넌트
 │           ├── booking.scss    # 예약 관련
@@ -2065,7 +2065,7 @@ exhibition-frontend/
 
 ### 주요 컴포넌트 설계
 
-#### PermissionGuard 컴포넌트 🆕
+#### PermissionGuard 컴포넌트 
 ```javascript
 
 ---
