@@ -1,48 +1,86 @@
-# 🎨 전시티켓예약 시스템 - 프론트엔드 개발환경 구축 (Windows 11 기준)
+# 🎨 전시티켓예약 시스템 - 프론트엔드 개발환경 구축 (Windows 11 기준, JavaScript 버전)
 
-이 문서는 전시티켓예약 시스템의 프론트엔드 개발환경을 Windows 11에서 구축하는 과정을 설명합니다.  
-Next.js App Router + javascript + SCSS 기반입니다.
+이 문서는 Windows 11 환경에서 `ticket-system/frontend` 폴더 기준으로 전시티켓예약 시스템의 **프론트엔드 개발환경을 JavaScript 기반으로 구축**하는 실전 가이드입니다.  
+Next.js 14 (App Router), JavaScript, SCSS 기반으로 구성됩니다.
+
+---
+
+## ✅ 1. 필수 도구 설치
+
+| 도구 | 설명 | 링크 |
+|------|------|------|
+| Node.js | v20 이상 (LTS 권장) | https://nodejs.org |
+| Git | 버전 관리 툴 | https://git-scm.com |
+| VS Code | 코드 편집기 | https://code.visualstudio.com |
+
+설치 완료 후 버전 확인:
+
+```bash
+node -v
+npm -v
+git --version
+```
 
 ---
 
 ## 📁 2. 프로젝트 디렉토리 생성 및 진입
 
-먼저 작업할 폴더를 만들고 이동합니다:
+먼저 루트 프로젝트 폴더(`ticket-system`)를 만들고, 프론트엔드 디렉토리로 진입합니다:
 
 ```bash
-mkdir exhibition-frontend
-cd exhibition-frontend
+mkdir -p ticket-system/frontend
+cd ticket-system/frontend
 ```
 
 ---
 
 ## ⚙️ 3. Next.js 프로젝트 초기화
 
-App Router + javascript 기반으로 생성:
+App Router + JavaScript 기반으로 프로젝트를 초기화합니다:
 
 ```bash
-npx create-next-app@latest . --app --javascript
+npx create-next-app@latest . --app
 ```
 
 ### 프롬프트 응답 예시:
 
 | 질문 | 답변 |
 |------|------|
-| javascript 사용 | ✅ Yes |
+| TypeScript 사용 | ❌ No |
 | Tailwind CSS 사용 | ❌ No |
 | App Router 사용 | ✅ Yes |
 | ESLint 사용 | ✅ Yes |
 | src/ 디렉토리 구조 | ❌ No |
-| 테스트 추가할까요? | ❌ No |
+| 테스트 설정 추가 | ❌ No |
 
 ---
 
 ## 🧵 4. SCSS 설정
 
-SCSS 설치:
+SCSS를 설치하고 사용할 준비를 합니다:
 
 ```bash
 npm install sass
+```
+
+### 사용 예시:
+
+```js
+// app/page.js
+import styles from './page.module.scss';
+
+export default function Home() {
+  return <h1 className={styles.title}>Exhibition System</h1>;
+}
+```
+
+```scss
+/* page.module.scss */
+.title {
+  color: #1e88e5;
+  font-weight: bold;
+  font-size: 2rem;
+}
 ```
 
 ---
@@ -53,7 +91,7 @@ npm install sass
 npm run dev
 ```
 
-브라우저에서 접속 확인 → http://localhost:3000
+브라우저에서 확인: http://localhost:3000
 
 ---
 
@@ -69,19 +107,20 @@ npm install react-hook-form dayjs
 ## 🗂️ 7. 디렉토리 구조 예시
 
 ```text
-exhibition-frontend/
-├── app/
-│   ├── [exhibition]/         # 유저 예약 흐름
-│   ├── admin/                # 전시회 담당자
-│   ├── super-admin/          # 슈퍼 관리자
-│   └── entrance/             # QR 입장 PWA
-├── components/               # 재사용 컴포넌트
-├── hooks/                    # 커스텀 훅
-├── services/                 # API 모듈
-├── styles/                   # SCSS 전용
-├── public/
-│   └── images/               # 이미지 파일
-└── .env.local                # 환경변수 설정
+ticket-system/
+└── frontend/
+    ├── app/
+    │   ├── [exhibition]/         # 유저 예약 흐름
+    │   ├── admin/                # 전시회 담당자
+    │   ├── super-admin/          # 슈퍼 관리자
+    │   └── entrance/             # QR 입장 PWA
+    ├── components/               # 재사용 컴포넌트
+    ├── hooks/                    # 커스텀 훅
+    ├── services/                 # API 모듈
+    ├── styles/                   # SCSS 전용
+    ├── public/
+    │   └── images/               # 이미지 파일
+    └── .env.local                # 환경변수 설정
 ```
 
 ---
@@ -98,5 +137,19 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 - ESLint  
 - Prettier  
-- React (by VS Code)  
+- React (by VS Code 팀)  
 - Thunder Client (API 테스트용)
+
+---
+
+## ✅ 10. 다음 실습 추천
+
+- [ ] 공통 Layout 컴포넌트 만들기 (`components/common/Layout.js`)
+- [ ] 관리자 로그인 페이지 (`/admin/login`)
+- [ ] 사용자 예약 → 결제 → 완료 흐름 (`/[exhibition]/order`)
+- [ ] `react-query`로 API 연동 실습
+
+---
+
+_작성일: 2025.07.25  
+작성자: ilogini_
