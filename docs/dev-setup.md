@@ -54,7 +54,10 @@ npx create-next-app@latest . --app
 | customize the import alias (`@/*` by default)?| ✅ Yes |
 
 ---
-
+## npm 패키지 설치
+```bash
+npm install axios react-query clsx dayjs react-hook-form qrcode.react react-toastify jwt-decode sass
+```
 ## 🧵 4. SCSS 설정
 
 SCSS를 설치하고 사용할 준비를 합니다:
