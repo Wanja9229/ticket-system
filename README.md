@@ -1,671 +1,3 @@
-Response 201:
-{
-  "id": 2,
-  "name": "일반 관람권 (소인)",
-  "message": "상품이 등록되었습니다.",
-  "available_quantity": 500
-}
-
-# 상품 수정
-PUT /api/admin/products/{id}
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "name": "일반 관람권 (소인) - 특가",
-  "base_price": 8000,
-  "total_quantity": 600
-}
-
-# 상품 삭제 (소프트 삭제)
-DELETE /api/admin/products/{id}
-Authorization: Bearer {token}
-
-Response 200:
-{
-  "message": "상품이 삭제되었습니다."
-}
-```
-
-#### 주문 관리 API
-```http
-# 주문 목록 조회 (담당 전시회만)
-GET /api/admin/orders?page=1&limit=20&status=all
-Authorization: Bearer {token}
-
-Response 200:
-{
-  "orders": [
-    {
-      "id": 1,
-      "order_number": "ORD20250725001",
-      "customer_name": "홍길동",
-      "customer_phone": "010-1234-5678",
-      "total_amount": 30000,
-      "payment_status": "completed",
-      "visit_date": "2025-08-01",
-      "entrance_checked": false,
-      "items": [
-        {
-          "product_name": "일반 관람권 (대인)",
-          "option_name": "조조할인",
-          "quantity": 2,
-          "unit_price": 13000,
-          "total_price": 26000
-        }
-      ],
-      "qr_code": "encoded_qr_data",
-      "created_at": "2025-07-25T10:30:00Z"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 1,
-    "total_pages": 1
-  }
-}
-
-# 주문 상세 조회
-GET /api/admin/orders/{order_number}
-Authorization: Bearer {token}
-
-Response 200:
-{
-  "id": 1,
-  "order_number": "ORD20250725001",
-  "customer_name": "홍길동",
-  "customer_phone": "010-1234-5678",
-  "customer_email": "hong@example.com",
-  "total_amount": 30000,
-  "payment_status": "completed",
-  "payment_method": "card",
-  "payment_key": "toss_payment_key_123",
-  "visit_date": "2025-08-01",
-  "status": "reserved",
-  "entrance_checked": false,
-  "entrance_time": null,
-  "qr_code": "encoded_qr_data",
-  "items": [
-    {
-      "id": 1,
-      "product_name": "일반 관람권 (대인)",
-      "product_type": "adult",
-      "option_name": "조조할인",
-      "quantity": 2,
-      "unit_price": 13000,
-      "total_price": 26000
-    }
-  ],
-  "created_at": "2025-07-25T10:30:00Z"
-}
-
-# 주문 상태 변경
-PATCH /api/admin/orders/{order_number}/status
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "status": "cancelled",
-  "reason": "고객 요청에 의한 취소"
-}
-
-Response 200:
-{
-  "message": "주문 상태가 변경되었습니다.",
-  "old_status": "reserved",
-  "new_status": "cancelled"
-}
-```
-
-#### 입장 관리 API
-```http
-# QR 코드 스캔
-POST /api/admin/entrance/scan
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "qr_code": "encoded_qr_data"
-}
-
-Response 200:
-{
-  "success": true,
-  "order_number": "ORD20250725001",
-  "customer_name": "홍길동",
-  "visit_date": "2025-08-01",
-  "items": [
-    {
-      "product_name": "일반 관람권 (대인)",
-      "quantity": 2
-    }
-  ],
-  "entrance_status": "allowed",
-  "message": "입장이 확인되었습니다.",
-  "entrance_time": "2025-08-01T10:30:00Z"
-}
-
-# 입장 통계
-GET /api/admin/entrance/stats?date=2025-08-01
-Authorization: Bearer {token}
-
-Response 200:
-{
-  "date": "2025-08-01",
-  "total_visitors": 150,
-  "entrance_by_hour": [
-    {"hour": 9, "count": 20},
-    {"hour": 10, "count": 35},
-    {"hour": 11, "count": 45},
-    {"hour": 12, "count": 25},
-    {"hour": 13, "count": 15},
-    {"hour": 14, "count": 10}
-  ],
-  "entrance_by_ticket_type": {
-    "adult": 100,
-    "child": 50
-  }
-}
-```
-
-#### 공지사항 관리 API 🆕
-```http
-# 공지사항 목록 조회
-GET /api/admin/notices?page=1&limit=10
-Authorization: Bearer {token}
-
-Response 200:
-{
-  "notices": [
-    {
-      "id": 1,
-      "title": "전시회 운영 시간 안내",
-      "content": "전시회 운영 시간이 변경되었습니다...",
-      "author_name": "김담당",
-      "is_important": true,
-      "is_active": true,
-      "attachments": [
-        {
-          "id": 1,
-          "original_filename": "운영시간표.pdf",
-          "file_size": 102400
-        }
-      ],
-      "created_at": "2025-07-25T09:00:00Z"
-    }
-  ],
-  "total": 1
-}
-
-# 공지사항 작성
-POST /api/admin/notices
-Authorization: Bearer {token}
-Content-Type: multipart/form-data
-
-title: 새로운 할인 혜택 안내
-content: 8월 첫째 주 방문객을 위한 특별 할인...
-is_important: true
-attachments: [file1.pdf, image1.jpg]
-
-Response 201:
-{
-  "id": 2,
-  "title": "새로운 할인 혜택 안내",
-  "message": "공지사항이 등록되었습니다."
-}
-```
-
-#### 담당 전시회 대시보드 API
-```http
-GET /api/admin/dashboard
-Authorization: Bearer {token}
-
-Response 200:
-{
-  "exhibition_info": {
-    "code": "aaa",
-    "name": "2025 미술 전시회",
-    "start_date": "2025-08-01",
-    "end_date": "2025-08-31",
-    "days_remaining": 7
-  },
-  "sales_summary": {
-    "total_orders": 500,
-    "total_revenue": 7500000,
-    "today_orders": 25,
-    "today_revenue": 375000
-  },
-  "product_summary": {
-    "total_products": 3,
-    "active_products": 3,
-    "total_stock": 1500,
-    "sold_tickets": 750
-  },
-  "entrance_summary": {
-    "total_visitors": 450,
-    "today_visitors": 20,
-    "entrance_rate": 90.0
-  },
-  "recent_orders": [
-    {
-      "order_number": "ORD20250725025",
-      "customer_name": "이***",
-      "total_amount": 15000,
-      "payment_status": "completed",
-      "created_at": "2025-07-25T14:30:00Z"
-    }
-  ]
-}
-```
-
-### 일반 사용자 API (기존 유지)
-
-#### 전시회별 상품 조회
-```http
-GET /api/exhibitions/{code}/products
-Content-Type: application/json
-
-Response 200:
-{
-  "exhibition": {
-    "code": "aaa",
-    "name": "2025 미술 전시회",
-    "description": "현대 미술 작품을 감상할 수 있는 전시회",
-    "venue": "서울 미술관",
-    "start_date": "2025-08-01",
-    "end_date": "2025-08-31"
-  },
-  "products": [
-    {
-      "id": 1,
-      "name": "일반 관람권 (대인)",
-      "type": "adult",
-      "base_price": 15000,
-      "available_quantity": 750,
-      "options": [
-        {
-          "id": 1,
-          "option_name": "조조할인",
-          "price_adjustment": -2000,
-          "final_price": 13000,
-          "available_quantity": 100
-        },
-        {
-          "id": 2,
-          "option_name": "정상가",
-          "price_adjustment": 0,
-          "final_price": 15000,
-          "available_quantity": 650
-        }
-      ]
-    }
-  ]
-}
-```
-
-#### 주문 생성
-```http
-POST /api/orders
-Content-Type: application/json
-
-{
-  "exhibition_code": "aaa",
-  "customer_name": "홍길동",
-  "customer_phone": "010-1234-5678",
-  "customer_email": "hong@example.com",
-  "items": [
-    {
-      "product_id": 1,
-      "product_option_id": 1,
-      "quantity": 2
-    }
-  ],
-  "visit_date": "2025-08-01"
-}
-
-Response 201:
-{
-  "order_number": "ORD20250725001",
-  "exhibition_code": "aaa",
-  "customer_name": "홍길동",
-  "total_amount": 26000,
-  "items": [
-    {
-      "product_name": "일반 관람권 (대인)",
-      "option_name": "조조할인",
-      "quantity": 2,
-      "unit_price": 13000,
-      "total_price": 26000
-    }
-  ],
-  "visit_date": "2025-08-01",
-  "status": "pending_payment",
-  "expires_at": "2025-07-25T11:00:00Z"
-}
-```
-
-### 결제 API (기존 유지)
-
-#### 결제 초기화
-```http
-POST /api/payments/initialize
-Content-Type: application/json
-
-{
-  "order_number": "ORD20250725001",
-  "amount": 26000,
-  "customer_name": "홍길동",
-  "customer_email": "hong@example.com",
-  "customer_phone": "010-1234-5678"
-}
-
-Response 200:
-{
-  "payment_key": "toss_payment_key_123",
-  "checkout_url": "https://api.tosspayments.com/v1/payments/toss_payment_key_123",
-  "order_id": "ORD20250725001",
-  "amount": 26000,
-  "expires_at": "2025-07-25T11:00:00Z"
-}
-```
-
-#### 결제 확인
-```http
-POST /api/payments/confirm
-Content-Type: application/json
-
-{
-  "payment_key": "toss_payment_key_123",
-  "order_id": "ORD20250725001",
-  "amount": 26000
-}
-
-Response 200:
-{
-  "order_number": "ORD20250725001",
-  "payment_status": "completed",
-  "payment_method": "카드",
-  "paid_at": "2025-07-25T10:45:00Z",
-  "qr_code": "encoded_qr_data_for_entrance",
-  "message": "결제가 완료되었습니다."
-}
-```
-
----
-
-## 🎨 프론트엔드 구조
-
-### 디렉토리 구조 (다중 관리자 지원)
-```
-exhibition-frontend/
-├── src/
-│   ├── app/                    # Next.js App Router
-│   │   ├── [exhibition]/       # 동적 라우팅 (일반 사용자)
-│   │   │   ├── page.js         # 예약 메인 페이지
-│   │   │   ├── order/          
-│   │   │   │   └── page.js     # 주문서 작성
-│   │   │   ├── payment/        
-│   │   │   │   └── page.js     # 결제 페이지
-│   │   │   └── complete/       
-│   │   │       └── page.js     # 결제 완료
-│   │   ├── super-admin/        # 🆕 슈퍼 관리자 전용
-│   │   │   ├── login/page.js   # 슈퍼관리자 로그인
-│   │   │   ├── layout.js       # 슈퍼관리자 레이아웃
-│   │   │   ├── dashboard/page.js # 전체 시스템 대시보드
-│   │   │   ├── exhibitions/    # 전시회 관리
-│   │   │   │   ├── page.js     # 전시회 목록
-│   │   │   │   ├── create/page.js # 전시회 생성
-│   │   │   │   ├── [id]/
-│   │   │   │   │   ├── page.js # 전시회 상세
-│   │   │   │   │   └── edit/page.js # 전시회 수정
-│   │   │   ├── managers/       # 담당자 관리
-│   │   │   │   ├── page.js     # 담당자 목록
-│   │   │   │   ├── create/page.js # 담당자 생성
-│   │   │   │   └── [id]/
-│   │   │   │       ├── page.js # 담당자 상세
-│   │   │   │       └── edit/page.js # 담당자 수정
-│   │   │   ├── statistics/     # 전체 통계
-│   │   │   │   ├── page.js     # 통계 대시보드
-│   │   │   │   ├── sales/page.js # 매출 통계
-│   │   │   │   └── exhibitions/page.js # 전시회별 통계
-│   │   │   └── logs/           # 시스템 활동 로그
-│   │   │       └── page.js     # 활동 로그 조회
-│   │   ├── admin/              # 전시회 담당자 페이지
-│   │   │   ├── login/page.js   # 담당자 로그인
-│   │   │   ├── layout.js       # 담당자 레이아웃
-│   │   │   ├── dashboard/page.js # 담당 전시회 대시보드
-│   │   │   ├── profile/        # 프로필 관리
-│   │   │   │   ├── page.js     # 프로필 조회
-│   │   │   │   └── edit/page.js # 프로필 수정
-│   │   │   ├── exhibition/     # 담당 전시회 정보
-│   │   │   │   ├── page.js     # 전시회 정보 조회
-│   │   │   │   └── edit/page.js # 전시회 정보 수정
-│   │   │   ├── products/       # 상품 관리
-│   │   │   │   ├── page.js     # 상품 목록
-│   │   │   │   ├── create/page.js # 상품 등록
-│   │   │   │   └── [id]/
-│   │   │   │       ├── page.js # 상품 상세
-│   │   │   │       └── edit/page.js # 상품 수정
-│   │   │   ├── orders/         # 주문 관리
-│   │   │   │   ├── page.js     # 주문 목록
-│   │   │   │   └── [orderNumber]/
-│   │   │   │       └── page.js # 주문 상세
-│   │   │   ├── entrance/       # 입장 관리
-│   │   │   │   ├── page.js     # QR 스캔 페이지
-│   │   │   │   ├── scan/page.js # QR 스캔 화면
-│   │   │   │   └── stats/page.js # 입장 통계
-│   │   │   ├── notices/        # 🆕 공지사항 관리
-│   │   │   │   ├── page.js     # 공지사항 목록
-│   │   │   │   ├── create/page.js # 공지사항 작성
-│   │   │   │   └── [id]/
-│   │   │   │       ├── page.js # 공지사항 상세
-│   │   │   │       └── edit/page.js # 공지사항 수정
-│   │   │   └── statistics/     # 담당 전시회 통계
-│   │   │       ├── page.js     # 통계 대시보드
-│   │   │       ├── sales/page.js # 매출 분석
-│   │   │       └── visitors/page.js # 방문자 분석
-│   │   └── entrance/           # PWA 입장 관리
-│   │       ├── page.js         # PWA 메인 페이지
-│   │       ├── scan/page.js    # QR 스캔 페이지
-│   │       └── offline/page.js # 오프라인 페이지
-│   ├── components/             # 재사용 컴포넌트
-│   │   ├── common/             # 공통 컴포넌트
-│   │   │   ├── Loading.js
-│   │   │   ├── ErrorBoundary.js
-│   │   │   ├── Toast.js
-│   │   │   ├── Layout.js
-│   │   │   ├── Header.js
-│   │   │   ├── Sidebar.js
-│   │   │   ├── Modal.js
-│   │   │   ├── ConfirmDialog.js
-│   │   │   ├── Pagination.js
-│   │   │   ├── SearchBox.js
-│   │   │   ├── DatePicker.js
-│   │   │   ├── FileUpload.js      # 🆕 파일 업로드
-│   │   │   └── PermissionGuard.js # 🆕 권한 확인 컴포넌트
-│   │   ├── booking/            # 예약 관련
-│   │   │   ├── ProductCard.js
-│   │   │   ├── ProductOption.js   # 🆕 상품 옵션 선택
-│   │   │   ├── QuantitySelector.js
-│   │   │   ├── CartSummary.js
-│   │   │   └── VisitDatePicker.js
-│   │   ├── payment/            # 결제 관련
-│   │   │   ├── TossPayment.js
-│   │   │   ├── PaymentForm.js
-│   │   │   ├── PaymentResult.js
-│   │   │   └── QRCodeDisplay.js
-│   │   ├── super-admin/        # 🆕 슈퍼관리자 컴포넌트
-│   │   │   ├── ExhibitionForm.js  # 전시회 생성/수정 폼
-│   │   │   ├── ExhibitionCard.js  # 전시회 카드
-│   │   │   ├── ManagerForm.js     # 담당자 생성/수정 폼
-│   │   │   ├── ManagerCard.js     # 담당자 카드
-│   │   │   ├── SystemStats.js     # 시스템 통계
-│   │   │   ├── ActivityLogTable.js # 활동 로그 테이블
-│   │   │   ├── SuperAdminHeader.js # 슈퍼관리자 헤더
-│   │   │   └── SuperAdminSidebar.js # 슈퍼관리자 사이드바
-│   │   ├── admin/              # 담당자 관리 컴포넌트
-│   │   │   ├── ProductForm.js     # 상품 등록/수정 폼
-│   │   │   ├── ProductCard.js     # 상품 카드
-│   │   │   ├── ProductOption.js   # 🆕 상품 옵션 관리
-│   │   │   ├── OrderTable.js      # 주문 테이블
-│   │   │   ├── OrderDetail.js     # 주문 상세
-│   │   │   ├── OrderStatus.js     # 주문 상태 관리
-│   │   │   ├── NoticeForm.js      # 🆕 공지사항 작성 폼
-│   │   │   ├── NoticeList.js      # 🆕 공지사항 목록
-│   │   │   ├── ExhibitionStats.js # 전시회 통계
-│   │   │   ├── SalesChart.js      # 매출 차트
-│   │   │   ├── VisitorChart.js    # 방문자 차트
-│   │   │   ├── AdminHeader.js     # 담당자 헤더
-│   │   │   └── AdminSidebar.js    # 담당자 사이드바
-│   │   └── entrance/           # 입장 관리
-│   │       ├── QRScanner.js       # QR 스캐너
-│   │       ├── ScanResult.js      # 스캔 결과
-│   │       ├── EntranceCheck.js   # 입장 확인
-│   │       ├── EntranceStats.js   # 입장 통계
-│   │       └── PWAInstallPrompt.js # PWA 설치 안내
-│   ├── hooks/                  # 커스텀 훅
-│   │   ├── useAuth.js          # 인증 관리 (권한별) 🆕
-│   │   ├── usePermission.js    # 🆕 권한 확인
-│   │   ├── useSuperAdmin.js    # 🆕 슈퍼관리자 전용 훅
-│   │   ├── useAdminManager.js  # 🆕 담당자 관리 훅
-│   │   ├── useExhibition.js    # 🆕 전시회 관리 훅
-│   │   ├── useProduct.js       # 🆕 상품 관리 훅
-│   │   ├── useOrder.js         # 🆕 주문 관리 훅
-│   │   ├── useNotice.js        # 🆕 공지사항 관리 훅
-│   │   ├── useQueue.js         # 대기열 관리
-│   │   ├── usePayment.js       # 결제 처리
-│   │   ├── useQRScanner.js     # QR 스캔
-│   │   ├── useLocalStorage.js  # 로컬 스토리지
-│   │   ├── useFileUpload.js    # 🆕 파일 업로드
-│   │   └── useActivityLog.js   # 🆕 활동 로그
-│   ├── services/               # API 서비스
-│   │   ├── api.js              # API 클라이언트
-│   │   ├── superAdmin.js       # 🆕 슈퍼관리자 API
-│   │   ├── admin.js            # 담당자 API
-│   │   ├── exhibition.js       # 🆕 전시회 API
-│   │   ├── product.js          # 🆕 상품 API
-│   │   ├── order.js            # 🆕 주문 API
-│   │   ├── notice.js           # 🆕 공지사항 API
-│   │   ├── booking.js          # 예약 API
-│   │   ├── payment.js          # 결제 API
-│   │   ├── entrance.js         # 입장 API
-│   │   └── upload.js           # 🆕 파일 업로드 API
-│   ├── middleware/             # 🆕 미들웨어
-│   │   ├── auth.js             # 인증 미들웨어
-│   │   └── permission.js       # 권한 검증 미들웨어
-│   ├── context/                # 🆕 React Context
-│   │   ├── AuthContext.js      # 인증 컨텍스트
-│   │   ├── PermissionContext.js # 권한 컨텍스트
-│   │   └── ThemeContext.js     # 테마 컨텍스트
-│   ├── utils/                  # 유틸리티
-│   │   ├── constants.js        # 상수
-│   │   ├── helpers.js          # 헬퍼 함수
-│   │   ├── validation.js       # 검증 로직
-│   │   ├── formatting.js       # 포맷팅
-│   │   ├── permissions.js      # 🆕 권한 관련 유틸
-│   │   ├── dateUtils.js        # 날짜 유틸
-│   │   ├── fileUtils.js        # 🆕 파일 유틸
-│   │   └── chartUtils.js       # 🆕 차트 유틸
-│   └── styles/                 # SCSS 스타일
-│       ├── globals.scss
-│       ├── variables.scss      # SCSS 변수
-│       ├── mixins.scss         # SCSS 믹스인
-│       ├── reset.scss          # CSS 리셋
-│       ├── super-admin/        # 🆕 슈퍼관리자 스타일
-│       │   ├── layout.scss
-│       │   ├── dashboard.scss
-│       │   ├── exhibitions.scss
-│       │   ├── managers.scss
-│       │   └── statistics.scss
-│       ├── admin/              # 담당자 스타일
-│       │   ├── layout.scss
-│       │   ├── dashboard.scss
-│       │   ├── products.scss
-│       │   ├── orders.scss
-│       │   ├── entrance.scss
-│       │   └── notices.scss    # 🆕 공지사항 스타일
-│       └── components/
-│           ├── common.scss     # 공통 컴포넌트
-│           ├── booking.scss    # 예약 관련
-│           ├── payment.scss    # 결제 관련
-│           ├── entrance.scss   # 입장 관리
-│           └── forms.scss      # 폼 관련
-├── public/
-│   ├── manifest.json           # PWA 매니페스트  
-│   ├── sw.js                   # 서비스 워커
-│   ├── icons/                  # PWA 아이콘
-│   │   ├── icon-192x192.png
-│   │   ├── icon-512x512.png
-│   │   └── apple-touch-icon.png
-│   ├── images/
-│   │   ├── logo.png
-│   │   ├── placeholder.jpg
-│   │   └── qr-frame.png
-│   └── offline.html            # 오프라인 페이지
-├── package.json
-├── next.config.js
-├── tailwind.config.js          # 사용 안함 (SCSS 사용)
-├── .env.local                  # 환경변수
-├── .gitignore
-└── README.md
-```
-
-### 주요 컴포넌트 설계
-
-#### PermissionGuard 컴포넌트 🆕
-```javascript
-// components/common/PermissionGuard.js
-'use client';
-import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import Loading from './Loading';
-
-export default function PermissionGuard({ 
-  children, 
-  requiredLevel = 1, 
-  exhibitionSpecific = true,
-  allowSuperAdmin = true,
-  fallback = null 
-}) {
-  const { user, isLoading, isAuthenticated } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/admin/login');
-      return;
-    }
-
-    if (!isLoading && user) {
-      // 슈퍼 관리자는 모든 권한 허용
-      if (allowSuperAdmin && user.user_type === 'super') {
-        return;
-      }
-
-      // 권한 레벨 확인
-      if (user.permission_level < requiredLevel) {
-        router.push('/unauthorized');
-        return;
-      }
-
-      // 전시회별 권한 확인
-      if (exhibitionSpecific && user.permission_level < 9) {
-        const currentPath = window.location.pathname;
-        const exhibitionId = getCurrentExhibitionId(currentPath);
-        
-        if (exhibitionId && exhibitionId !== user.exhibition_id) {
-          router.push('/unauthorized');
-          return;
-        }
-      }
-    }
-  }, [user, isLoading, isAuthenticated, requiredLevel, exhibitionSpecific, allowSuperAdmin]);
-
-  if (isLoading) {
-    return <Loading /# 전시회 티켓 예약 시스템 - 완전한 개발 가이드
-
 > **프로젝트명**: 전시회 티켓 예약 시스템  
 > **목표**: 고성능 다중 전시회 티켓 예약 및 관리 시스템  
 > **성능 요구사항**: 동시 접속자 1만명 처리 가능  
@@ -2006,6 +1338,625 @@ Response 200:
   "available_quantity": 600
 }
 ```
+
+
+Response 201:
+{
+  "id": 2,
+  "name": "일반 관람권 (소인)",
+  "message": "상품이 등록되었습니다.",
+  "available_quantity": 500
+}
+
+# 상품 수정
+PUT /api/admin/products/{id}
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "name": "일반 관람권 (소인) - 특가",
+  "base_price": 8000,
+  "total_quantity": 600
+}
+
+# 상품 삭제 (소프트 삭제)
+DELETE /api/admin/products/{id}
+Authorization: Bearer {token}
+
+Response 200:
+{
+  "message": "상품이 삭제되었습니다."
+}
+```
+
+#### 주문 관리 API
+```http
+# 주문 목록 조회 (담당 전시회만)
+GET /api/admin/orders?page=1&limit=20&status=all
+Authorization: Bearer {token}
+
+Response 200:
+{
+  "orders": [
+    {
+      "id": 1,
+      "order_number": "ORD20250725001",
+      "customer_name": "홍길동",
+      "customer_phone": "010-1234-5678",
+      "total_amount": 30000,
+      "payment_status": "completed",
+      "visit_date": "2025-08-01",
+      "entrance_checked": false,
+      "items": [
+        {
+          "product_name": "일반 관람권 (대인)",
+          "option_name": "조조할인",
+          "quantity": 2,
+          "unit_price": 13000,
+          "total_price": 26000
+        }
+      ],
+      "qr_code": "encoded_qr_data",
+      "created_at": "2025-07-25T10:30:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 1,
+    "total_pages": 1
+  }
+}
+
+# 주문 상세 조회
+GET /api/admin/orders/{order_number}
+Authorization: Bearer {token}
+
+Response 200:
+{
+  "id": 1,
+  "order_number": "ORD20250725001",
+  "customer_name": "홍길동",
+  "customer_phone": "010-1234-5678",
+  "customer_email": "hong@example.com",
+  "total_amount": 30000,
+  "payment_status": "completed",
+  "payment_method": "card",
+  "payment_key": "toss_payment_key_123",
+  "visit_date": "2025-08-01",
+  "status": "reserved",
+  "entrance_checked": false,
+  "entrance_time": null,
+  "qr_code": "encoded_qr_data",
+  "items": [
+    {
+      "id": 1,
+      "product_name": "일반 관람권 (대인)",
+      "product_type": "adult",
+      "option_name": "조조할인",
+      "quantity": 2,
+      "unit_price": 13000,
+      "total_price": 26000
+    }
+  ],
+  "created_at": "2025-07-25T10:30:00Z"
+}
+
+# 주문 상태 변경
+PATCH /api/admin/orders/{order_number}/status
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "status": "cancelled",
+  "reason": "고객 요청에 의한 취소"
+}
+
+Response 200:
+{
+  "message": "주문 상태가 변경되었습니다.",
+  "old_status": "reserved",
+  "new_status": "cancelled"
+}
+```
+
+#### 입장 관리 API
+```http
+# QR 코드 스캔
+POST /api/admin/entrance/scan
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "qr_code": "encoded_qr_data"
+}
+
+Response 200:
+{
+  "success": true,
+  "order_number": "ORD20250725001",
+  "customer_name": "홍길동",
+  "visit_date": "2025-08-01",
+  "items": [
+    {
+      "product_name": "일반 관람권 (대인)",
+      "quantity": 2
+    }
+  ],
+  "entrance_status": "allowed",
+  "message": "입장이 확인되었습니다.",
+  "entrance_time": "2025-08-01T10:30:00Z"
+}
+
+# 입장 통계
+GET /api/admin/entrance/stats?date=2025-08-01
+Authorization: Bearer {token}
+
+Response 200:
+{
+  "date": "2025-08-01",
+  "total_visitors": 150,
+  "entrance_by_hour": [
+    {"hour": 9, "count": 20},
+    {"hour": 10, "count": 35},
+    {"hour": 11, "count": 45},
+    {"hour": 12, "count": 25},
+    {"hour": 13, "count": 15},
+    {"hour": 14, "count": 10}
+  ],
+  "entrance_by_ticket_type": {
+    "adult": 100,
+    "child": 50
+  }
+}
+```
+
+#### 공지사항 관리 API 🆕
+```http
+# 공지사항 목록 조회
+GET /api/admin/notices?page=1&limit=10
+Authorization: Bearer {token}
+
+Response 200:
+{
+  "notices": [
+    {
+      "id": 1,
+      "title": "전시회 운영 시간 안내",
+      "content": "전시회 운영 시간이 변경되었습니다...",
+      "author_name": "김담당",
+      "is_important": true,
+      "is_active": true,
+      "attachments": [
+        {
+          "id": 1,
+          "original_filename": "운영시간표.pdf",
+          "file_size": 102400
+        }
+      ],
+      "created_at": "2025-07-25T09:00:00Z"
+    }
+  ],
+  "total": 1
+}
+
+# 공지사항 작성
+POST /api/admin/notices
+Authorization: Bearer {token}
+Content-Type: multipart/form-data
+
+title: 새로운 할인 혜택 안내
+content: 8월 첫째 주 방문객을 위한 특별 할인...
+is_important: true
+attachments: [file1.pdf, image1.jpg]
+
+Response 201:
+{
+  "id": 2,
+  "title": "새로운 할인 혜택 안내",
+  "message": "공지사항이 등록되었습니다."
+}
+```
+
+#### 담당 전시회 대시보드 API
+```http
+GET /api/admin/dashboard
+Authorization: Bearer {token}
+
+Response 200:
+{
+  "exhibition_info": {
+    "code": "aaa",
+    "name": "2025 미술 전시회",
+    "start_date": "2025-08-01",
+    "end_date": "2025-08-31",
+    "days_remaining": 7
+  },
+  "sales_summary": {
+    "total_orders": 500,
+    "total_revenue": 7500000,
+    "today_orders": 25,
+    "today_revenue": 375000
+  },
+  "product_summary": {
+    "total_products": 3,
+    "active_products": 3,
+    "total_stock": 1500,
+    "sold_tickets": 750
+  },
+  "entrance_summary": {
+    "total_visitors": 450,
+    "today_visitors": 20,
+    "entrance_rate": 90.0
+  },
+  "recent_orders": [
+    {
+      "order_number": "ORD20250725025",
+      "customer_name": "이***",
+      "total_amount": 15000,
+      "payment_status": "completed",
+      "created_at": "2025-07-25T14:30:00Z"
+    }
+  ]
+}
+```
+
+### 일반 사용자 API (기존 유지)
+
+#### 전시회별 상품 조회
+```http
+GET /api/exhibitions/{code}/products
+Content-Type: application/json
+
+Response 200:
+{
+  "exhibition": {
+    "code": "aaa",
+    "name": "2025 미술 전시회",
+    "description": "현대 미술 작품을 감상할 수 있는 전시회",
+    "venue": "서울 미술관",
+    "start_date": "2025-08-01",
+    "end_date": "2025-08-31"
+  },
+  "products": [
+    {
+      "id": 1,
+      "name": "일반 관람권 (대인)",
+      "type": "adult",
+      "base_price": 15000,
+      "available_quantity": 750,
+      "options": [
+        {
+          "id": 1,
+          "option_name": "조조할인",
+          "price_adjustment": -2000,
+          "final_price": 13000,
+          "available_quantity": 100
+        },
+        {
+          "id": 2,
+          "option_name": "정상가",
+          "price_adjustment": 0,
+          "final_price": 15000,
+          "available_quantity": 650
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### 주문 생성
+```http
+POST /api/orders
+Content-Type: application/json
+
+{
+  "exhibition_code": "aaa",
+  "customer_name": "홍길동",
+  "customer_phone": "010-1234-5678",
+  "customer_email": "hong@example.com",
+  "items": [
+    {
+      "product_id": 1,
+      "product_option_id": 1,
+      "quantity": 2
+    }
+  ],
+  "visit_date": "2025-08-01"
+}
+
+Response 201:
+{
+  "order_number": "ORD20250725001",
+  "exhibition_code": "aaa",
+  "customer_name": "홍길동",
+  "total_amount": 26000,
+  "items": [
+    {
+      "product_name": "일반 관람권 (대인)",
+      "option_name": "조조할인",
+      "quantity": 2,
+      "unit_price": 13000,
+      "total_price": 26000
+    }
+  ],
+  "visit_date": "2025-08-01",
+  "status": "pending_payment",
+  "expires_at": "2025-07-25T11:00:00Z"
+}
+```
+
+### 결제 API (기존 유지)
+
+#### 결제 초기화
+```http
+POST /api/payments/initialize
+Content-Type: application/json
+
+{
+  "order_number": "ORD20250725001",
+  "amount": 26000,
+  "customer_name": "홍길동",
+  "customer_email": "hong@example.com",
+  "customer_phone": "010-1234-5678"
+}
+
+Response 200:
+{
+  "payment_key": "toss_payment_key_123",
+  "checkout_url": "https://api.tosspayments.com/v1/payments/toss_payment_key_123",
+  "order_id": "ORD20250725001",
+  "amount": 26000,
+  "expires_at": "2025-07-25T11:00:00Z"
+}
+```
+
+#### 결제 확인
+```http
+POST /api/payments/confirm
+Content-Type: application/json
+
+{
+  "payment_key": "toss_payment_key_123",
+  "order_id": "ORD20250725001",
+  "amount": 26000
+}
+
+Response 200:
+{
+  "order_number": "ORD20250725001",
+  "payment_status": "completed",
+  "payment_method": "카드",
+  "paid_at": "2025-07-25T10:45:00Z",
+  "qr_code": "encoded_qr_data_for_entrance",
+  "message": "결제가 완료되었습니다."
+}
+```
+
+---
+
+## 🎨 프론트엔드 구조
+
+### 디렉토리 구조 (다중 관리자 지원)
+```
+exhibition-frontend/
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── [exhibition]/       # 동적 라우팅 (일반 사용자)
+│   │   │   ├── page.js         # 예약 메인 페이지
+│   │   │   ├── order/          
+│   │   │   │   └── page.js     # 주문서 작성
+│   │   │   ├── payment/        
+│   │   │   │   └── page.js     # 결제 페이지
+│   │   │   └── complete/       
+│   │   │       └── page.js     # 결제 완료
+│   │   ├── super-admin/        # 🆕 슈퍼 관리자 전용
+│   │   │   ├── login/page.js   # 슈퍼관리자 로그인
+│   │   │   ├── layout.js       # 슈퍼관리자 레이아웃
+│   │   │   ├── dashboard/page.js # 전체 시스템 대시보드
+│   │   │   ├── exhibitions/    # 전시회 관리
+│   │   │   │   ├── page.js     # 전시회 목록
+│   │   │   │   ├── create/page.js # 전시회 생성
+│   │   │   │   ├── [id]/
+│   │   │   │   │   ├── page.js # 전시회 상세
+│   │   │   │   │   └── edit/page.js # 전시회 수정
+│   │   │   ├── managers/       # 담당자 관리
+│   │   │   │   ├── page.js     # 담당자 목록
+│   │   │   │   ├── create/page.js # 담당자 생성
+│   │   │   │   └── [id]/
+│   │   │   │       ├── page.js # 담당자 상세
+│   │   │   │       └── edit/page.js # 담당자 수정
+│   │   │   ├── statistics/     # 전체 통계
+│   │   │   │   ├── page.js     # 통계 대시보드
+│   │   │   │   ├── sales/page.js # 매출 통계
+│   │   │   │   └── exhibitions/page.js # 전시회별 통계
+│   │   │   └── logs/           # 시스템 활동 로그
+│   │   │       └── page.js     # 활동 로그 조회
+│   │   ├── admin/              # 전시회 담당자 페이지
+│   │   │   ├── login/page.js   # 담당자 로그인
+│   │   │   ├── layout.js       # 담당자 레이아웃
+│   │   │   ├── dashboard/page.js # 담당 전시회 대시보드
+│   │   │   ├── profile/        # 프로필 관리
+│   │   │   │   ├── page.js     # 프로필 조회
+│   │   │   │   └── edit/page.js # 프로필 수정
+│   │   │   ├── exhibition/     # 담당 전시회 정보
+│   │   │   │   ├── page.js     # 전시회 정보 조회
+│   │   │   │   └── edit/page.js # 전시회 정보 수정
+│   │   │   ├── products/       # 상품 관리
+│   │   │   │   ├── page.js     # 상품 목록
+│   │   │   │   ├── create/page.js # 상품 등록
+│   │   │   │   └── [id]/
+│   │   │   │       ├── page.js # 상품 상세
+│   │   │   │       └── edit/page.js # 상품 수정
+│   │   │   ├── orders/         # 주문 관리
+│   │   │   │   ├── page.js     # 주문 목록
+│   │   │   │   └── [orderNumber]/
+│   │   │   │       └── page.js # 주문 상세
+│   │   │   ├── entrance/       # 입장 관리
+│   │   │   │   ├── page.js     # QR 스캔 페이지
+│   │   │   │   ├── scan/page.js # QR 스캔 화면
+│   │   │   │   └── stats/page.js # 입장 통계
+│   │   │   ├── notices/        # 🆕 공지사항 관리
+│   │   │   │   ├── page.js     # 공지사항 목록
+│   │   │   │   ├── create/page.js # 공지사항 작성
+│   │   │   │   └── [id]/
+│   │   │   │       ├── page.js # 공지사항 상세
+│   │   │   │       └── edit/page.js # 공지사항 수정
+│   │   │   └── statistics/     # 담당 전시회 통계
+│   │   │       ├── page.js     # 통계 대시보드
+│   │   │       ├── sales/page.js # 매출 분석
+│   │   │       └── visitors/page.js # 방문자 분석
+│   │   └── entrance/           # PWA 입장 관리
+│   │       ├── page.js         # PWA 메인 페이지
+│   │       ├── scan/page.js    # QR 스캔 페이지
+│   │       └── offline/page.js # 오프라인 페이지
+│   ├── components/             # 재사용 컴포넌트
+│   │   ├── common/             # 공통 컴포넌트
+│   │   │   ├── Loading.js
+│   │   │   ├── ErrorBoundary.js
+│   │   │   ├── Toast.js
+│   │   │   ├── Layout.js
+│   │   │   ├── Header.js
+│   │   │   ├── Sidebar.js
+│   │   │   ├── Modal.js
+│   │   │   ├── ConfirmDialog.js
+│   │   │   ├── Pagination.js
+│   │   │   ├── SearchBox.js
+│   │   │   ├── DatePicker.js
+│   │   │   ├── FileUpload.js      # 🆕 파일 업로드
+│   │   │   └── PermissionGuard.js # 🆕 권한 확인 컴포넌트
+│   │   ├── booking/            # 예약 관련
+│   │   │   ├── ProductCard.js
+│   │   │   ├── ProductOption.js   # 🆕 상품 옵션 선택
+│   │   │   ├── QuantitySelector.js
+│   │   │   ├── CartSummary.js
+│   │   │   └── VisitDatePicker.js
+│   │   ├── payment/            # 결제 관련
+│   │   │   ├── TossPayment.js
+│   │   │   ├── PaymentForm.js
+│   │   │   ├── PaymentResult.js
+│   │   │   └── QRCodeDisplay.js
+│   │   ├── super-admin/        # 🆕 슈퍼관리자 컴포넌트
+│   │   │   ├── ExhibitionForm.js  # 전시회 생성/수정 폼
+│   │   │   ├── ExhibitionCard.js  # 전시회 카드
+│   │   │   ├── ManagerForm.js     # 담당자 생성/수정 폼
+│   │   │   ├── ManagerCard.js     # 담당자 카드
+│   │   │   ├── SystemStats.js     # 시스템 통계
+│   │   │   ├── ActivityLogTable.js # 활동 로그 테이블
+│   │   │   ├── SuperAdminHeader.js # 슈퍼관리자 헤더
+│   │   │   └── SuperAdminSidebar.js # 슈퍼관리자 사이드바
+│   │   ├── admin/              # 담당자 관리 컴포넌트
+│   │   │   ├── ProductForm.js     # 상품 등록/수정 폼
+│   │   │   ├── ProductCard.js     # 상품 카드
+│   │   │   ├── ProductOption.js   # 🆕 상품 옵션 관리
+│   │   │   ├── OrderTable.js      # 주문 테이블
+│   │   │   ├── OrderDetail.js     # 주문 상세
+│   │   │   ├── OrderStatus.js     # 주문 상태 관리
+│   │   │   ├── NoticeForm.js      # 🆕 공지사항 작성 폼
+│   │   │   ├── NoticeList.js      # 🆕 공지사항 목록
+│   │   │   ├── ExhibitionStats.js # 전시회 통계
+│   │   │   ├── SalesChart.js      # 매출 차트
+│   │   │   ├── VisitorChart.js    # 방문자 차트
+│   │   │   ├── AdminHeader.js     # 담당자 헤더
+│   │   │   └── AdminSidebar.js    # 담당자 사이드바
+│   │   └── entrance/           # 입장 관리
+│   │       ├── QRScanner.js       # QR 스캐너
+│   │       ├── ScanResult.js      # 스캔 결과
+│   │       ├── EntranceCheck.js   # 입장 확인
+│   │       ├── EntranceStats.js   # 입장 통계
+│   │       └── PWAInstallPrompt.js # PWA 설치 안내
+│   ├── hooks/                  # 커스텀 훅
+│   │   ├── useAuth.js          # 인증 관리 (권한별) 🆕
+│   │   ├── usePermission.js    # 🆕 권한 확인
+│   │   ├── useSuperAdmin.js    # 🆕 슈퍼관리자 전용 훅
+│   │   ├── useAdminManager.js  # 🆕 담당자 관리 훅
+│   │   ├── useExhibition.js    # 🆕 전시회 관리 훅
+│   │   ├── useProduct.js       # 🆕 상품 관리 훅
+│   │   ├── useOrder.js         # 🆕 주문 관리 훅
+│   │   ├── useNotice.js        # 🆕 공지사항 관리 훅
+│   │   ├── useQueue.js         # 대기열 관리
+│   │   ├── usePayment.js       # 결제 처리
+│   │   ├── useQRScanner.js     # QR 스캔
+│   │   ├── useLocalStorage.js  # 로컬 스토리지
+│   │   ├── useFileUpload.js    # 🆕 파일 업로드
+│   │   └── useActivityLog.js   # 🆕 활동 로그
+│   ├── services/               # API 서비스
+│   │   ├── api.js              # API 클라이언트
+│   │   ├── superAdmin.js       # 🆕 슈퍼관리자 API
+│   │   ├── admin.js            # 담당자 API
+│   │   ├── exhibition.js       # 🆕 전시회 API
+│   │   ├── product.js          # 🆕 상품 API
+│   │   ├── order.js            # 🆕 주문 API
+│   │   ├── notice.js           # 🆕 공지사항 API
+│   │   ├── booking.js          # 예약 API
+│   │   ├── payment.js          # 결제 API
+│   │   ├── entrance.js         # 입장 API
+│   │   └── upload.js           # 🆕 파일 업로드 API
+│   ├── middleware/             # 🆕 미들웨어
+│   │   ├── auth.js             # 인증 미들웨어
+│   │   └── permission.js       # 권한 검증 미들웨어
+│   ├── context/                # 🆕 React Context
+│   │   ├── AuthContext.js      # 인증 컨텍스트
+│   │   ├── PermissionContext.js # 권한 컨텍스트
+│   │   └── ThemeContext.js     # 테마 컨텍스트
+│   ├── utils/                  # 유틸리티
+│   │   ├── constants.js        # 상수
+│   │   ├── helpers.js          # 헬퍼 함수
+│   │   ├── validation.js       # 검증 로직
+│   │   ├── formatting.js       # 포맷팅
+│   │   ├── permissions.js      # 🆕 권한 관련 유틸
+│   │   ├── dateUtils.js        # 날짜 유틸
+│   │   ├── fileUtils.js        # 🆕 파일 유틸
+│   │   └── chartUtils.js       # 🆕 차트 유틸
+│   └── styles/                 # SCSS 스타일
+│       ├── globals.scss
+│       ├── variables.scss      # SCSS 변수
+│       ├── mixins.scss         # SCSS 믹스인
+│       ├── reset.scss          # CSS 리셋
+│       ├── super-admin/        # 🆕 슈퍼관리자 스타일
+│       │   ├── layout.scss
+│       │   ├── dashboard.scss
+│       │   ├── exhibitions.scss
+│       │   ├── managers.scss
+│       │   └── statistics.scss
+│       ├── admin/              # 담당자 스타일
+│       │   ├── layout.scss
+│       │   ├── dashboard.scss
+│       │   ├── products.scss
+│       │   ├── orders.scss
+│       │   ├── entrance.scss
+│       │   └── notices.scss    # 🆕 공지사항 스타일
+│       └── components/
+│           ├── common.scss     # 공통 컴포넌트
+│           ├── booking.scss    # 예약 관련
+│           ├── payment.scss    # 결제 관련
+│           ├── entrance.scss   # 입장 관리
+│           └── forms.scss      # 폼 관련
+├── public/
+│   ├── manifest.json           # PWA 매니페스트  
+│   ├── sw.js                   # 서비스 워커
+│   ├── icons/                  # PWA 아이콘
+│   │   ├── icon-192x192.png
+│   │   ├── icon-512x512.png
+│   │   └── apple-touch-icon.png
+│   ├── images/
+│   │   ├── logo.png
+│   │   ├── placeholder.jpg
+│   │   └── qr-frame.png
+│   └── offline.html            # 오프라인 페이지
+├── package.json
+├── next.config.js
+├── tailwind.config.js          # 사용 안함 (SCSS 사용)
+├── .env.local                  # 환경변수
+├── .gitignore
+└── README.md
+```
+
+### 주요 컴포넌트 설계
+
+#### PermissionGuard 컴포넌트 🆕
+```javascript
 
 ---
 
