@@ -56,7 +56,7 @@ npx create-next-app@latest . --app
 ---
 ## npm 패키지 설치
 ```bash
-npm install axios react-query clsx dayjs react-hook-form qrcode.react react-toastify jwt-decode sass
+npm install axios @tanstack/react-query clsx dayjs react-hook-form qrcode.react react-toastify jwt-decode sass
 ```
 ## 🧵 4. SCSS 설정
 
