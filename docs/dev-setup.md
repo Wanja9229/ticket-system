@@ -54,16 +54,9 @@ npx create-next-app@latest . --app
 | customize the import alias (`@/*` by default)?| ✅ Yes |
 
 ---
-## npm 패키지 설치
+## 🧵 4 npm 패키지 라이브러리 설치
 ```bash
 npm install axios @tanstack/react-query clsx dayjs react-hook-form qrcode.react react-toastify jwt-decode sass
-```
-## 🧵 4. SCSS 설정
-
-SCSS를 설치하고 사용할 준비를 합니다:
-
-```bash
-npm install sass
 ```
 
 ### 사용 예시:
@@ -98,16 +91,7 @@ npm run dev
 
 ---
 
-## 📦 6. 주요 라이브러리 설치
-
-```bash
-npm install axios react-query clsx
-npm install react-hook-form dayjs
-```
-
----
-
-## 🗂️ 7. 디렉토리 구조 예시
+## 🗂️ 6. 디렉토리 구조 예시
 
 ```text
 ticket-system/
@@ -128,7 +112,7 @@ ticket-system/
 
 ---
 
-## 📄 8. .env.local 환경변수 설정
+## 📄 7. .env.local 환경변수 설정
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
@@ -136,7 +120,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 ---
 
-## 🔌 9. 추천 VS Code 확장
+## 🔌 8. 추천 VS Code 확장
 
 - ESLint  
 - Prettier  
@@ -145,7 +129,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 ---
 
-## ✅ 10. 다음 실습 추천
+## ✅ 9. 다음 실습 추천
 
 - [ ] 공통 Layout 컴포넌트 만들기 (`components/common/Layout.js`)
 - [ ] 관리자 로그인 페이지 (`/admin/login`)
