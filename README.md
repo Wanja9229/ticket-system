@@ -1850,7 +1850,7 @@ Response 200:
 
 ### 디렉토리 구조 (다중 관리자 지원)
 ```
-exhibition-frontend/
+frontend/
 ├── src/
 │   ├── app/                    # Next.js App Router
 │   │   ├── [exhibition]/       # 동적 라우팅 (일반 사용자)
