@@ -62,20 +62,128 @@
 ### 🔄 전체 관리 플로우
 
 ```mermaid
-graph TD
-    A[슈퍼 관리자<br/>Level 9] --> B[전시회 생성]
-    B --> C[전시회 코드 발급<br/>예: aaa, bbb, ccc]
-    C --> D[전시회 담당자 계정 생성<br/>Level 3]
-    D --> E[담당자에게 로그인정보 전달<br/>이메일/SMS]
-    E --> F[담당자가 상품 등록/관리]
-    F --> G[티켓 판매 시작]
-    G --> H[일반 사용자 예약/결제]
-    H --> I[현장 입장 관리<br/>QR 스캔]
+graph TB
+    %% 사용자 진입점
+    User[👤 사용자] --> WebSite[🌐 웹사이트 접속<br/>domain.com/aaa]
+    Admin[👨‍💼 관리자] --> AdminPanel[🔧 관리자 패널<br/>domain.com/admin]
+    Staff[👩‍💼 현장직원] --> PWAApp[📱 PWA 스캐너 앱<br/>domain.com/scanner]
+
+    %% 웹사이트 흐름
+    WebSite --> ExhibitionCheck{전시회 코드<br/>유효성 검사}
+    ExhibitionCheck -->|유효| ExhibitionHome[🎨 전시회 홈페이지]
+    ExhibitionCheck -->|무효| ErrorPage[❌ 404 에러]
     
-    A --> J[전체 전시회 통계 조회]
-    A --> K[담당자 권한 관리]
-    F --> L[상품별 재고 관리]
-    I --> M[입장 통계 수집]
+    ExhibitionHome --> TicketSelect[🎫 티켓 선택<br/>- 성인/청소년/어린이<br/>- 수량 선택<br/>- 입장일자 선택]
+    
+    TicketSelect --> CustomerInfo[📝 고객정보 입력<br/>- 이름<br/>- 연락처<br/>- 이메일]
+    
+    CustomerInfo --> StockCheck{재고 확인<br/>Redis}
+    StockCheck -->|재고 부족| StockError[❌ 재고 부족 안내]
+    StockCheck -->|재고 충분| StockReserve[🔒 재고 임시 예약<br/>Redis Lock]
+    
+    StockReserve --> PaymentPage[💳 결제 페이지<br/>토스페이먼츠]
+    
+    PaymentPage --> PaymentProcess{결제 처리}
+    PaymentProcess -->|성공| PaymentSuccess[✅ 결제 완료]
+    PaymentProcess -->|실패| PaymentFail[❌ 결제 실패]
+    PaymentProcess -->|취소| PaymentCancel[🚫 결제 취소]
+    
+    PaymentFail --> StockRelease1[🔓 재고 해제]
+    PaymentCancel --> StockRelease2[🔓 재고 해제]
+    
+    PaymentSuccess --> OrderCreate[📋 주문 생성<br/>PostgreSQL]
+    OrderCreate --> QRGenerate[🔲 QR코드 생성]
+    QRGenerate --> KakaoSend[📲 카카오 알림톡 발송]
+    KakaoSend --> OrderComplete[✅ 예약 완료]
+
+    %% 관리자 패널 흐름
+    AdminPanel --> AdminLogin{관리자 로그인}
+    AdminLogin -->|실패| AdminLoginFail[❌ 로그인 실패]
+    AdminLogin -->|성공| AdminDashboard[📊 관리자 대시보드]
+    
+    AdminDashboard --> AdminMenus{관리 메뉴}
+    AdminMenus --> ProductMgmt[🎫 상품 관리<br/>- 티켓 종류 등록<br/>- 가격 설정<br/>- 재고 관리]
+    AdminMenus --> OrderMgmt[📋 주문 관리<br/>- 주문 내역 조회<br/>- 환불 처리<br/>- 고객 정보]
+    AdminMenus --> StatsMgmt[📈 통계 관리<br/>- 매출 통계<br/>- 입장 통계<br/>- 실시간 현황]
+    AdminMenus --> InvitationMgmt[🎟️ 초대권 관리<br/>- 업체별 초대권 발급<br/>- 사용 현황 추적]
+    
+    ProductMgmt --> RedisSync1[🔄 Redis 재고 동기화]
+    OrderMgmt --> DBUpdate1[💾 DB 업데이트]
+    
+    %% PWA 스캐너 앱 흐름
+    PWAApp --> PWALogin{현장직원 로그인}
+    PWALogin -->|실패| PWALoginFail[❌ 로그인 실패]
+    PWALogin -->|성공| PWAScanner[📷 QR 스캐너]
+    
+    PWAScanner --> QRScan[📸 QR코드 스캔]
+    QRScan --> QRValidate{QR 유효성 검증}
+    QRValidate -->|무효| QRInvalid[❌ 무효한 QR코드]
+    QRValidate -->|이미 사용| QRUsed[⚠️ 이미 입장한 티켓]
+    QRValidate -->|유효| QRValid[✅ 유효한 티켓]
+    
+    QRValid --> EntryConfirm[🚪 입장 확인<br/>- 고객 정보 표시<br/>- 입장 버튼]
+    EntryConfirm --> EntryProcess{입장 처리}
+    EntryProcess -->|확인| EntrySuccess[✅ 입장 완료<br/>DB 플래그 업데이트]
+    EntryProcess -->|취소| EntryCanceled[🚫 입장 취소]
+    
+    EntrySuccess --> EntryLog[📝 입장 로그 기록]
+    EntrySuccess --> PWAScanner
+
+    %% 초대권 시스템 흐름
+    InvitationMgmt --> InviteCreate[📧 초대권 생성<br/>- 업체명 입력<br/>- 수량 설정]
+    InviteCreate --> InviteLink[🔗 초대 링크 생성]
+    InviteLink --> InviteSend[📤 업체에 링크 전송]
+    
+    InviteSend --> InviteAccess[🎟️ 업체 직원이<br/>초대 링크 접속]
+    InviteAccess --> InviteForm[📝 초대권 신청서<br/>- 직원 연락처 입력]
+    InviteForm --> InviteQR[🔲 초대권 QR 생성]
+    InviteQR --> InviteKakao[📲 초대권 카카오톡 발송]
+
+    %% 시스템 백그라운드 프로세스
+    subgraph Background[🔄 백그라운드 프로세스]
+        StockSync[⏰ 재고 동기화<br/>Redis ↔ PostgreSQL]
+        PaymentWebhook[🔔 결제 웹훅 처리<br/>토스페이먼츠]
+        LogRotation[📁 로그 순환]
+        StatsUpdate[📊 통계 업데이트]
+        CacheUpdate[🗄️ 캐시 갱신]
+    end
+
+    %% 데이터베이스 연결
+    subgraph Database[💾 데이터 저장소]
+        PostgreSQL[(🐘 PostgreSQL<br/>- 주문 데이터<br/>- 고객 정보<br/>- 상품 정보<br/>- 관리자 계정)]
+        Redis[(🔴 Redis<br/>- 실시간 재고<br/>- 세션 관리<br/>- 캐시<br/>- 대기열)]
+    end
+
+    %% 외부 API 연결
+    subgraph ExternalAPI[🌐 외부 API]
+        TossAPI[💳 토스페이먼츠 API]
+        KakaoAPI[📱 카카오 알림톡 API]
+    end
+
+    %% 데이터 흐름 연결
+    OrderCreate --> PostgreSQL
+    StockReserve --> Redis
+    PaymentProcess --> TossAPI
+    KakaoSend --> KakaoAPI
+    QRValidate --> PostgreSQL
+    EntrySuccess --> PostgreSQL
+
+    %% 스타일링
+    classDef userClass fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef adminClass fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef processClass fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef errorClass fill:#ffebee,stroke:#b71c1c,stroke-width:2px
+    classDef successClass fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef dbClass fill:#fff3e0,stroke:#e65100,stroke-width:3px
+    classDef apiClass fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+
+    class User,WebSite,ExhibitionHome,TicketSelect,CustomerInfo,PaymentPage userClass
+    class Admin,AdminPanel,AdminDashboard,ProductMgmt,OrderMgmt,StatsMgmt adminClass
+    class Staff,PWAApp,PWAScanner,QRScan,EntryConfirm processClass
+    class ErrorPage,StockError,PaymentFail,PaymentCancel errorClass
+    class PaymentSuccess,OrderComplete,EntrySuccess,QRValid successClass
+    class PostgreSQL,Redis dbClass
+    class TossAPI,KakaoAPI apiClass
 ```
 
 ### 👥 사용자 역할 정의
