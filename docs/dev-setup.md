@@ -47,11 +47,11 @@ npx create-next-app@latest . --app
 | 질문 | 답변 |
 |------|------|
 | TypeScript 사용 | ❌ No |
-| Tailwind CSS 사용 | ❌ No |
-| App Router 사용 | ✅ Yes |
 | ESLint 사용 | ✅ Yes |
-| src/ 디렉토리 구조 | ❌ No |
-| 테스트 설정 추가 | ❌ No |
+| Tailwind CSS 사용 | ❌ No |
+| src/ 디렉토리 구조 | ✅ Yes |
+| Turbopack for `next dev`| ❌ No |
+| customize the import alias (`@/*` by default)?| ✅ Yes |
 
 ---
 
