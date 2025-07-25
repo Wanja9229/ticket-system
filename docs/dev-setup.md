@@ -9,7 +9,7 @@ Next.js 14 (App Router), JavaScript, SCSS 기반으로 구성됩니다.
 
 | 도구 | 설명 | 링크 |
 |------|------|------|
-| Node.js | v20 이상 (LTS 권장) | https://nodejs.org |
+| Node.js | v22.17.1 (LTS 권장) | https://nodejs.org |
 | Git | 버전 관리 툴 | https://git-scm.com |
 | VS Code | 코드 편집기 | https://code.visualstudio.com |
 
@@ -25,7 +25,7 @@ git --version
 
 ## 📁 2. 프로젝트 디렉토리 생성 및 진입
 
-먼저 루트 프로젝트 폴더(`ticket-system`)를 만들고, 프론트엔드 디렉토리로 진입합니다:
+먼저 루트 로컬에 프로젝트 폴더(`ticket-system`)를 만들고, 프론트엔드 디렉토리로 진입합니다:
 
 ```bash
 mkdir -p ticket-system/frontend
