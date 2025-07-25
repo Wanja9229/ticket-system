@@ -1,0 +1,244 @@
+/* Functions 실습 페이지 스타일 */
+.expContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.problemSection {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+}
+
+.problemSection h1 {
+  margin: 0 0 20px 0;
+  font-size: 2rem;
+}
+
+.mission {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.requirements ul {
+  list-style: none;
+  padding: 0;
+}
+
+.requirements li {
+  padding: 8px 0;
+  padding-left: 20px;
+  position: relative;
+}
+
+.requirements li:before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #34D399;
+  font-weight: bold;
+}
+
+.example {
+  margin-top: 15px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+}
+
+.editorSection {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.codeEditor {
+  width: 100%;
+  background: #1F2937;
+  color: #F9FAFB;
+  border: none;
+  border-radius: 6px;
+  padding: 15px;
+  font-family: 'Fira Code', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.codeEditor:focus {
+  outline: 2px solid #059669;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+
+.runBtn {
+  background: #10B981;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.runBtn:hover {
+  background: #059669;
+}
+
+.checkBtn {
+  background: #3B82F6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.checkBtn:hover {
+  background: #2563EB;
+}
+
+.hintBtn {
+  background: #F59E0B;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.hintBtn:hover {
+  background: #D97706;
+}
+
+.answerBtn {
+  background: #8B5CF6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.answerBtn:hover {
+  background: #7C3AED;
+}
+
+.resultSection {
+  background: #F3F4F6;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.output {
+  background: #1F2937;
+  color: #34D399;
+  padding: 15px;
+  border-radius: 6px;
+  font-family: monospace;
+  white-space: pre-wrap;
+  min-height: 60px;
+}
+
+.hintSection, .answerSection {
+  background: #FFFBEB;
+  border: 1px solid #FCD34D;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.hintContent p {
+  margin: 15px 0 8px 0;
+  font-weight: bold;
+}
+
+.hintContent pre, .answerCode {
+  background: #1F2937;
+  color: #F9FAFB;
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 13px;
+  margin: 8px 0 15px 0;
+}
+
+.answerTabs h3 {
+  color: #059669;
+  margin: 20px 0 10px 0;
+  border-bottom: 2px solid #D1FAE5;
+  padding-bottom: 5px;
+}
+
+.answerTabs h3:first-child {
+  margin-top: 0;
+}
+
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.navBtn {
+  padding: 12px 24px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.back {
+  background: #6B7280;
+  color: white;
+}
+
+.back:hover {
+  background: #4B5563;
+}
+
+.next {
+  background: #059669;
+  color: white;
+}
+
+.next:hover {
+  background: #047857;
+}
+
+.functions-exp code {
+  background: #E5E7EB;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+  color: #1F2937;
+}
+
+@media (max-width: 768px) {
+  .buttonGroup {
+    flex-direction: column;
+  }
+  
+  .navigation {
+    flex-direction: column;
+    gap: 10px;
+  }
+}

@@ -39,7 +39,7 @@ cd ticket-system/frontend
 App Router + JavaScript 기반으로 프로젝트를 초기화합니다:
 
 ```bash
-npx create-next-app@latest . --app
+npx create-next-app@14.1.0 frontend
 ```
 
 ### 프롬프트 응답 예시:
@@ -50,6 +50,7 @@ npx create-next-app@latest . --app
 | ESLint 사용 | ✅ Yes |
 | Tailwind CSS 사용 | ❌ No |
 | src/ 디렉토리 구조 | ✅ Yes |
+| App router | ✅ Yes |
 | Turbopack for `next dev`| ❌ No |
 | customize the import alias (`@/*` by default)?| ✅ Yes |
 
@@ -121,7 +122,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 ---
 
 ## 🔌 8. 추천 VS Code 확장
-
+- Markdown Preview Enhanced
 - ESLint  
 - Prettier  
 - React (by VS Code 팀)  
