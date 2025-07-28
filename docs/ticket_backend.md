@@ -1932,4 +1932,675 @@ AsyncSessionLocal = async_sessionmaker(
 )
 ```
 
-이제 **프론트엔드 구조 및 컴포넌트** 문서를 작성하겠습니다!
+API 통신 오류: {e}")
+                raise
+    
+    async def cancel_payment(
+        self,
+        payment_key: str,
+        cancel_reason: str,
+        cancel_amount: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """결제 취소"""
+        async with httpx.AsyncClient() as client:
+            try:
+                cancel_data = {"cancelReason": cancel_reason}
+                if cancel_amount:
+                    cancel_data["cancelAmount"] = cancel_amount
+                
+                response = await client.post(
+                    f"{self.base_url}/{payment_key}/cancel",
+                    headers=self.headers,
+                    json=cancel_data
+                )
+                
+                if response.status_code == 200:
+                    return response.json()
+                else:
+                    error = response.json()
+                    logger.error(f"결제 취소 실패: {error}")
+                    raise Exception(error.get("message"))
+                    
+            except Exception as e:
+                logger.error(f"토스페이먼츠 API 통신 오류: {e}")
+                raise
+```
+
+### 카카오 알림톡 연동
+
+```python
+# app/external/kakao_notify.py
+import httpx
+import json
+from typing import Dict, Any, List
+from app.config import settings
+from app.core.logger import get_logger
+
+logger = get_logger(__name__)
+
+class KakaoNotifyService:
+    """카카오 알림톡 서비스"""
+    
+    def __init__(self):
+        self.api_key = settings.KAKAO_API_KEY
+        self.sender_key = settings.KAKAO_SENDER_KEY
+        self.base_url = settings.KAKAO_API_URL
+        self.headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"KakaoAK {self.api_key}"
+        }
+    
+    async def send_booking_confirmation(
+        self,
+        phone: str,
+        name: str,
+        event_title: str,
+        order_number: str,
+        visit_date: str,
+        ticket_count: int,
+        total_amount: int
+    ) -> Dict[str, Any]:
+        """예약 확인 알림톡"""
+        template_data = {
+            "template_code": "booking_confirm_001",
+            "receiver_num": phone,
+            "receiver_name": name,
+            "template_args": {
+                "event_title": event_title,
+                "order_number": order_number,
+                "visit_date": visit_date,
+                "ticket_count": str(ticket_count),
+                "total_amount": f"{total_amount:,}",
+                "customer_name": name
+            }
+        }
+        
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    f"{self.base_url}/send",
+                    headers=self.headers,
+                    json=template_data
+                )
+                
+                if response.status_code == 200:
+                    logger.info(f"알림톡 발송 성공: {order_number}")
+                    return response.json()
+                else:
+                    error = response.json()
+                    logger.error(f"알림톡 발송 실패: {error}")
+                    return {"success": False, "error": error}
+                    
+            except Exception as e:
+                logger.error(f"카카오 API 통신 오류: {e}")
+                return {"success": False, "error": str(e)}
+    
+    async def send_entrance_notification(
+        self,
+        phone: str,
+        name: str,
+        event_title: str,
+        entrance_time: str
+    ) -> Dict[str, Any]:
+        """입장 완료 알림톡"""
+        template_data = {
+            "template_code": "entrance_complete_001",
+            "receiver_num": phone,
+            "receiver_name": name,
+            "template_args": {
+                "event_title": event_title,
+                "customer_name": name,
+                "entrance_time": entrance_time
+            }
+        }
+        
+        # API 호출 로직...
+        return {"success": True}
+```
+
+---
+
+## 🛡️ 미들웨어 및 보안
+
+### CORS 미들웨어
+
+```python
+# app/core/middleware.py
+from fastapi import Request, status
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+import time
+import uuid
+from app.core.logger import get_logger
+
+logger = get_logger(__name__)
+
+class LoggingMiddleware(BaseHTTPMiddleware):
+    """요청/응답 로깅 미들웨어"""
+    
+    async def dispatch(self, request: Request, call_next):
+        request_id = str(uuid.uuid4())
+        start_time = time.time()
+        
+        # 요청 로깅
+        logger.info(
+            f"[{request_id}] {request.method} {request.url.path} "
+            f"- Client: {request.client.host}"
+        )
+        
+        # 요청 처리
+        response = await call_next(request)
+        
+        # 응답 로깅
+        process_time = time.time() - start_time
+        logger.info(
+            f"[{request_id}] Status: {response.status_code} "
+            f"- Process time: {process_time:.3f}s"
+        )
+        
+        # 응답 헤더 추가
+        response.headers["X-Request-ID"] = request_id
+        response.headers["X-Process-Time"] = str(process_time)
+        
+        return response
+
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    """Rate Limiting 미들웨어"""
+    
+    def __init__(self, app, calls: int = 100, period: int = 60):
+        super().__init__(app)
+        self.calls = calls
+        self.period = period
+        self.clients = {}
+    
+    async def dispatch(self, request: Request, call_next):
+        client_ip = request.client.host
+        now = time.time()
+        
+        # 클라이언트별 요청 기록
+        if client_ip not in self.clients:
+            self.clients[client_ip] = []
+        
+        # 만료된 요청 제거
+        self.clients[client_ip] = [
+            timestamp for timestamp in self.clients[client_ip]
+            if timestamp > now - self.period
+        ]
+        
+        # Rate limit 확인
+        if len(self.clients[client_ip]) >= self.calls:
+            return JSONResponse(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                content={"detail": "Too many requests"}
+            )
+        
+        # 요청 기록
+        self.clients[client_ip].append(now)
+        
+        response = await call_next(request)
+        return response
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """보안 헤더 미들웨어"""
+    
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        
+        # 보안 헤더 추가
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        
+        return response
+```
+
+### 예외 처리
+
+```python
+# app/core/exceptions.py
+from fastapi import Request, status
+from fastapi.responses import JSONResponse
+from app.core.logger import get_logger
+
+logger = get_logger(__name__)
+
+class TicketSystemException(Exception):
+    """기본 예외 클래스"""
+    def __init__(self, message: str, status_code: int = 400):
+        self.message = message
+        self.status_code = status_code
+        super().__init__(self.message)
+
+class NotFoundException(TicketSystemException):
+    """리소스를 찾을 수 없음"""
+    def __init__(self, message: str = "리소스를 찾을 수 없습니다."):
+        super().__init__(message, status.HTTP_404_NOT_FOUND)
+
+class UnauthorizedException(TicketSystemException):
+    """인증 실패"""
+    def __init__(self, message: str = "인증이 필요합니다."):
+        super().__init__(message, status.HTTP_401_UNAUTHORIZED)
+
+class ForbiddenException(TicketSystemException):
+    """권한 부족"""
+    def __init__(self, message: str = "권한이 부족합니다."):
+        super().__init__(message, status.HTTP_403_FORBIDDEN)
+
+class ConflictException(TicketSystemException):
+    """충돌 (중복 등)"""
+    def __init__(self, message: str = "요청이 현재 상태와 충돌합니다."):
+        super().__init__(message, status.HTTP_409_CONFLICT)
+
+class ValidationException(TicketSystemException):
+    """유효성 검증 실패"""
+    def __init__(self, message: str = "입력값이 유효하지 않습니다."):
+        super().__init__(message, status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+# 전역 예외 핸들러
+async def ticket_system_exception_handler(
+    request: Request,
+    exc: TicketSystemException
+) -> JSONResponse:
+    """커스텀 예외 핸들러"""
+    logger.error(
+        f"TicketSystemException: {exc.message} - "
+        f"Path: {request.url.path} - "
+        f"Method: {request.method}"
+    )
+    
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": exc.__class__.__name__,
+            "message": exc.message,
+            "path": request.url.path
+        }
+    )
+
+async def general_exception_handler(
+    request: Request,
+    exc: Exception
+) -> JSONResponse:
+    """일반 예외 핸들러"""
+    logger.error(
+        f"Unhandled exception: {str(exc)} - "
+        f"Path: {request.url.path} - "
+        f"Method: {request.method}",
+        exc_info=True
+    )
+    
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "error": "InternalServerError",
+            "message": "서버 내부 오류가 발생했습니다.",
+            "path": request.url.path
+        }
+    )
+```
+
+---
+
+## ⚙️ 설정 및 환경변수
+
+### 환경 설정
+
+```python
+# app/config.py
+from pydantic import BaseSettings, validator
+from typing import Optional, List
+import os
+
+class Settings(BaseSettings):
+    """애플리케이션 설정"""
+    
+    # 기본 설정
+    APP_NAME: str = "Ticket System API"
+    APP_VERSION: str = "3.0.0"
+    DEBUG: bool = False
+    ENVIRONMENT: str = "development"
+    
+    # 서버 설정
+    HOST: str = "0.0.0.0"
+    PORT: int = 8000
+    WORKERS: int = 4
+    
+    # 데이터베이스
+    DATABASE_URL: str
+    DATABASE_POOL_SIZE: int = 20
+    DATABASE_MAX_OVERFLOW: int = 0
+    
+    # Redis
+    REDIS_URL: str
+    REDIS_MAX_CONNECTIONS: int = 50
+    
+    # JWT
+    SECRET_KEY: str
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    
+    # 토스페이먼츠
+    TOSS_CLIENT_KEY: str
+    TOSS_SECRET_KEY: str
+    TOSS_API_URL: str = "https://api.tosspayments.com/v1/payments"
+    
+    # 카카오
+    KAKAO_API_KEY: str
+    KAKAO_SENDER_KEY: str
+    KAKAO_API_URL: str = "https://kapi.kakao.com/v1/api/talk"
+    
+    # 파일 업로드
+    UPLOAD_DIR: str = "./uploads"
+    MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
+    ALLOWED_EXTENSIONS: List[str] = [".jpg", ".jpeg", ".png", ".pdf"]
+    
+    # CORS
+    CORS_ORIGINS: List[str] = ["http://localhost:3000"]
+    
+    # 로깅
+    LOG_LEVEL: str = "INFO"
+    LOG_FILE: Optional[str] = None
+    
+    @validator("DATABASE_URL")
+    def validate_database_url(cls, v):
+        if not v.startswith(("postgresql://", "postgresql+asyncpg://")):
+            raise ValueError("DATABASE_URL must be a PostgreSQL URL")
+        return v
+    
+    class Config:
+        env_file = ".env"
+        case_sensitive = True
+
+settings = Settings()
+```
+
+### 데이터베이스 설정
+
+```python
+# app/database.py
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from app.config import settings
+
+# 비동기 엔진
+engine = create_async_engine(
+    settings.DATABASE_URL,
+    echo=settings.DEBUG,
+    pool_size=settings.DATABASE_POOL_SIZE,
+    max_overflow=settings.DATABASE_MAX_OVERFLOW,
+    pool_pre_ping=True
+)
+
+# 세션 팩토리
+AsyncSessionLocal = sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
+
+# Base 클래스
+Base = declarative_base()
+
+# 동기 엔진 (마이그레이션용)
+sync_engine = create_async_engine(
+    settings.DATABASE_URL.replace("+asyncpg", ""),
+    echo=settings.DEBUG
+)
+```
+
+### Redis 설정
+
+```python
+# app/core/redis_client.py
+import redis.asyncio as redis
+import json
+from typing import Optional, Any
+from app.config import settings
+from app.core.logger import get_logger
+
+logger = get_logger(__name__)
+
+class RedisClient:
+    """Redis 클라이언트"""
+    
+    def __init__(self):
+        self.redis = None
+    
+    async def connect(self):
+        """Redis 연결"""
+        self.redis = await redis.from_url(
+            settings.REDIS_URL,
+            max_connections=settings.REDIS_MAX_CONNECTIONS,
+            decode_responses=True
+        )
+        logger.info("Redis connected")
+    
+    async def disconnect(self):
+        """Redis 연결 해제"""
+        if self.redis:
+            await self.redis.close()
+            logger.info("Redis disconnected")
+    
+    async def get(self, key: str) -> Optional[Any]:
+        """값 조회"""
+        value = await self.redis.get(key)
+        if value:
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                return value
+        return None
+    
+    async def set(
+        self, 
+        key: str, 
+        value: Any, 
+        ttl: Optional[int] = None
+    ) -> bool:
+        """값 저장"""
+        if isinstance(value, (dict, list)):
+            value = json.dumps(value)
+        
+        if ttl:
+            return await self.redis.setex(key, ttl, value)
+        else:
+            return await self.redis.set(key, value)
+    
+    async def delete(self, key: str) -> bool:
+        """값 삭제"""
+        return await self.redis.delete(key) > 0
+    
+    async def exists(self, key: str) -> bool:
+        """키 존재 여부"""
+        return await self.redis.exists(key) > 0
+    
+    async def incr(self, key: str, amount: int = 1) -> int:
+        """값 증가"""
+        return await self.redis.incrby(key, amount)
+    
+    async def decr(self, key: str, amount: int = 1) -> int:
+        """값 감소"""
+        return await self.redis.decrby(key, amount)
+
+# 싱글톤 인스턴스
+redis_client = RedisClient()
+```
+
+---
+
+## 💡 실제 구현 예시
+
+### FastAPI 애플리케이션 초기화
+
+```python
+# app/main.py
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+
+from app.config import settings
+from app.database import engine
+from app.core.redis_client import redis_client
+from app.core.middleware import (
+    LoggingMiddleware,
+    RateLimitMiddleware,
+    SecurityHeadersMiddleware
+)
+from app.core.exceptions import (
+    TicketSystemException,
+    ticket_system_exception_handler,
+    general_exception_handler
+)
+
+# API 라우터
+from app.api.v1 import api_router
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """애플리케이션 수명 주기 관리"""
+    # 시작
+    await redis_client.connect()
+    yield
+    # 종료
+    await redis_client.disconnect()
+    await engine.dispose()
+
+# FastAPI 앱 생성
+app = FastAPI(
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
+    debug=settings.DEBUG,
+    lifespan=lifespan
+)
+
+# CORS 설정
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+# 커스텀 미들웨어
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitMiddleware, calls=100, period=60)
+app.add_middleware(LoggingMiddleware)
+
+# 예외 핸들러
+app.add_exception_handler(TicketSystemException, ticket_system_exception_handler)
+app.add_exception_handler(Exception, general_exception_handler)
+
+# API 라우터 등록
+app.include_router(api_router, prefix="/api")
+
+# 헬스 체크
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "version": settings.APP_VERSION,
+        "environment": settings.ENVIRONMENT
+    }
+
+@app.get("/")
+async def root():
+    return {
+        "message": "Welcome to Ticket System API",
+        "version": settings.APP_VERSION,
+        "docs": "/docs",
+        "redoc": "/redoc"
+    }
+```
+
+### 실행 스크립트
+
+```python
+# run.py
+import uvicorn
+from app.config import settings
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "app.main:app",
+        host=settings.HOST,
+        port=settings.PORT,
+        workers=settings.WORKERS,
+        reload=settings.DEBUG,
+        log_level=settings.LOG_LEVEL.lower()
+    )
+```
+
+### 환경변수 예시
+
+```bash
+# .env.example
+# Application
+APP_NAME="Ticket System API"
+APP_VERSION="3.0.0"
+DEBUG=False
+ENVIRONMENT=production
+
+# Server
+HOST=0.0.0.0
+PORT=8000
+WORKERS=4
+
+# Database
+DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/ticket_system
+DATABASE_POOL_SIZE=20
+DATABASE_MAX_OVERFLOW=0
+
+# Redis
+REDIS_URL=redis://localhost:6379/0
+REDIS_MAX_CONNECTIONS=50
+
+# JWT
+SECRET_KEY=your-secret-key-here
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
+
+# Toss Payments
+TOSS_CLIENT_KEY=test_ck_xxxxxxxxxxxxx
+TOSS_SECRET_KEY=test_sk_xxxxxxxxxxxxx
+
+# Kakao
+KAKAO_API_KEY=xxxxxxxxxxxxx
+KAKAO_SENDER_KEY=xxxxxxxxxxxxx
+
+# CORS
+CORS_ORIGINS=["http://localhost:3000","https://yourdomain.com"]
+
+# Logging
+LOG_LEVEL=INFO
+```
+
+---
+
+## 📚 다음 단계
+
+이 백엔드 시스템은 다음과 같은 특징을 가집니다:
+
+### 🏗️ **Repository 패턴 적용**
+- 데이터 접근 로직의 추상화
+- 테스트 용이성 향상
+- 비즈니스 로직과 데이터 로직 분리
+
+### 🔐 **강력한 권한 시스템**
+- JWT 기반 인증
+- 역할별 세분화된 권한
+- 이벤트별 데이터 격리
+
+### ⚡ **고성능 아키텍처**
+- 비동기 처리 최적화
+- Redis 캐싱 전략
+- Connection Pool 관리
+
+### 🛡️ **보안 강화**
+- Rate Limiting
+- 보안 헤더
+- 입력값 검증

@@ -2,19 +2,19 @@
 
 > **프로젝트명**: ticket-system  
 > **목표**: 다중 관리자 지원 고성능 티켓 예약 시스템  
-> **작성일**: 2025.07.25  
-> **버전**: v2.0 (다중 관리자 시스템 추가)
+> **작성일**: 2025.07.28  
+> **버전**: v3.0 (간결하고 범용적인 설계)
 
 ## 📋 목차
 
 1. [스키마 개요](#-스키마-개요)
-2. [핵심 테이블 구조](#-핵심-테이블-구조)
-3. [관리자 및 권한 테이블](#-관리자-및-권한-테이블)
-4. [티켓 및 주문 테이블](#-티켓-및-주문-테이블)
-5. [공지사항 및 파일 테이블](#-공지사항-및-파일-테이블)
-6. [인덱스 최적화](#-인덱스-최적화)
-7. [초기 데이터](#-초기-데이터)
-8. [마이그레이션 스크립트](#-마이그레이션-스크립트)
+2. [관리자 및 권한 테이블](#-관리자-및-권한-테이블)
+3. [이벤트 및 상품 테이블](#-이벤트-및-상품-테이블)
+4. [주문 및 결제 테이블](#-주문-및-결제-테이블)
+5. [티켓 및 입장 테이블](#-티켓-및-입장-테이블)
+6. [기타 테이블](#-기타-테이블)
+7. [인덱스 최적화](#-인덱스-최적화)
+8. [초기 데이터](#-초기-데이터)
 
 ---
 
@@ -25,76 +25,91 @@
 ```mermaid
 erDiagram
     %% 관리자 및 권한 관련
-    super_admins ||--o{ events : "creates"
-    super_admins ||--o{ event_managers : "assigns"
-    super_admins ||--o{ admin_activity_logs : "logs"
+    admins ||--o{ events : "creates"
+    admins ||--o{ managers : "assigns"
+    admins ||--o{ logs : "logs"
     
-    event_managers ||--|| events : "manages"
-    event_managers ||--o{ products : "manages"
-    event_managers ||--o{ orders : "handles"
-    event_managers ||--o{ admin_activity_logs : "logs"
+    managers ||--|| events : "manages"
+    managers ||--o{ products : "manages"
+    managers ||--o{ orders : "handles"
+    managers ||--o{ logs : "logs"
     
     %% 이벤트 및 상품
     events ||--o{ products : "contains"
     events ||--o{ notices : "has"
-    events ||--o{ admin_activity_logs : "relates_to"
+    events ||--o{ stats : "summarizes"
     
-    products ||--o{ product_options : "has"
-    products ||--o{ order_items : "ordered_as"
+    products ||--o{ options : "has"
+    products ||--o{ items : "ordered_as"
     
-    product_options ||--o{ order_items : "selected_as"
+    options ||--o{ items : "selected_as"
     
     %% 주문 관련
-    customers ||--o{ orders : "places"
-    orders ||--o{ order_items : "contains"
+    members ||--o{ orders : "places"
+    orders ||--o{ items : "contains"
     orders ||--o{ payments : "paid_by"
-    orders ||--o{ qr_tickets : "generates"
+    orders ||--o{ tickets : "generates"
     
     %% 공지사항 및 파일
-    notices ||--o{ notice_files : "includes"
+    notices ||--o{ files : "includes"
+    events ||--o{ files : "has_images"
     
     %% 입장 관리
-    qr_tickets ||--o{ entrance_logs : "tracked"
-    event_managers ||--o{ entrance_logs : "processed_by"
+    tickets ||--o{ entrances : "tracked"
+    managers ||--o{ entrances : "processed_by"
 
     %% 테이블 정의
-    super_admins {
+    admins {
         int id PK
         string username UK
         string email UK
-        string password_hash
-        string full_name
-        boolean is_active
+        string password
+        string name
+        string phone
+        smallint level
+        char status
+        timestamp login_at
         timestamp created_at
         timestamp updated_at
     }
     
     events {
         int id PK
-        string event_code UK
-        string title
+        string code UK
+        string name
         text description
-        string image_url
+        string venue
+        string image
         date start_date
         date end_date
-        boolean is_active
-        char is_deleted
-        int created_by FK
+        char status
+        int admin_id FK
         timestamp created_at
         timestamp updated_at
     }
     
-    event_managers {
+    managers {
         int id PK
         int event_id FK
         string username UK
         string email UK
-        string password_hash
-        string full_name
-        int permission_level
-        boolean is_active
-        char is_deleted
-        int created_by FK
+        string password
+        string name
+        string phone
+        smallint level
+        char status
+        int admin_id FK
+        timestamp login_at
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    members {
+        int id PK
+        string name
+        string phone UK
+        string email
+        text memo
         timestamp created_at
         timestamp updated_at
     }
@@ -104,34 +119,25 @@ erDiagram
         int event_id FK
         string name
         text description
-        decimal base_price
-        int base_stock
-        int current_stock
-        boolean is_active
-        char is_deleted
-        int created_by FK
+        int price
+        int stock
+        int sold
+        int sort
+        char status
+        int admin_id
         timestamp created_at
         timestamp updated_at
     }
     
-    product_options {
+    options {
         int id PK
         int product_id FK
-        string option_name
-        decimal price_adjustment
-        int stock_quantity
-        int current_stock
-        boolean is_active
-        char is_deleted
-        timestamp created_at
-        timestamp updated_at
-    }
-    
-    customers {
-        int id PK
         string name
-        string phone UK
-        string email
+        int price_add
+        int stock
+        int sold
+        int sort
+        char status
         timestamp created_at
         timestamp updated_at
     }
@@ -139,51 +145,52 @@ erDiagram
     orders {
         int id PK
         int event_id FK
-        int customer_id FK
-        string order_number UK
-        decimal total_amount
+        int member_id FK
+        string order_no UK
+        int amount
         string status
         date visit_date
+        text memo
         timestamp created_at
         timestamp updated_at
     }
     
-    order_items {
+    items {
         int id PK
         int order_id FK
         int product_id FK
-        int product_option_id FK
-        string item_name
+        int option_id FK
+        string name
+        int price
         int quantity
-        decimal unit_price
-        decimal total_price
+        int amount
         timestamp created_at
     }
     
     payments {
         int id PK
         int order_id FK
-        string payment_key UK
-        string payment_method
-        decimal amount
+        string pay_key UK
+        string method
+        int amount
         string status
-        string toss_payment_id
-        json payment_data
+        string pg_tid
+        json pg_data
+        timestamp paid_at
         timestamp created_at
         timestamp updated_at
     }
     
-    qr_tickets {
+    tickets {
         int id PK
         int order_id FK
-        int order_item_id FK
-        string qr_code UK
-        string ticket_type
-        boolean is_used
+        int item_id FK
+        string code UK
+        string type
+        char used
         timestamp used_at
-        int used_by FK
+        int used_by
         timestamp created_at
-        timestamp updated_at
     }
     
     notices {
@@ -191,45 +198,59 @@ erDiagram
         int event_id FK
         string title
         text content
-        boolean is_pinned
-        boolean is_active
-        int created_by FK
+        int hit
+        char pin
+        char status
+        int admin_id
         timestamp created_at
         timestamp updated_at
     }
     
-    notice_files {
+    files {
         int id PK
-        int notice_id FK
-        string original_filename
-        string stored_filename
-        string file_path
-        int file_size
-        string content_type
+        string table_name
+        int table_id
+        string name
+        string path
+        int size
+        string type
+        int sort
+        int downloads
         timestamp created_at
     }
     
-    entrance_logs {
+    entrances {
         int id PK
-        int qr_ticket_id FK
-        int processed_by FK
-        string entrance_type
-        string device_info
-        timestamp processed_at
+        int ticket_id FK
+        int manager_id
+        string type
+        string device
+        text memo
+        timestamp created_at
     }
     
-    admin_activity_logs {
-        int id PK
-        int admin_id FK
-        int event_id FK
-        string admin_type
-        string action_type
-        string target_table
+    logs {
+        bigint id
+        int user_id
+        string user_type
+        int event_id
+        string action
+        string target
         int target_id
-        json old_data
-        json new_data
-        string ip_address
-        string user_agent
+        json data
+        inet ip
+        text agent
+        timestamp created_at
+    }
+    
+    stats {
+        int id PK
+        int event_id FK
+        date date
+        int orders
+        int sales
+        int tickets
+        int entrances
         timestamp created_at
     }
 ```
@@ -237,72 +258,107 @@ erDiagram
 ### 🎯 설계 원칙
 
 1. **다중 테넌시**: 각 이벤트가 독립적으로 운영
-2. **권한 기반 접근**: 세분화된 권한 레벨 시스템  
-3. **Soft Delete**: 물리적 삭제 대신 is_deleted 플래그 사용
+2. **권한 기반 접근**: 단순화된 권한 레벨 시스템  
+3. **상태 관리**: 단일 문자 상태 코드로 간결한 관리
 4. **활동 추적**: 모든 관리자 활동 로그 기록
-5. **성능 최적화**: 적절한 인덱스와 파티셔닝
-6. **확장성**: 미래 요구사항을 고려한 유연한 구조
+5. **성능 최적화**: 필수 인덱스와 파티셔닝
+6. **확장성**: 범용적인 테이블 구조로 유연한 확장
 
 ---
 
 ## 👥 관리자 및 권한 테이블
 
-### 1. 슈퍼 관리자 테이블 (super_admins)
+### 1. 관리자 테이블 (admins) - 슈퍼 관리자
 
 ```sql
-CREATE TABLE super_admins (
+CREATE TABLE admins (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
+    username VARCHAR(30) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    full_name VARCHAR(100) NOT NULL,
-    is_active BOOLEAN DEFAULT true,
+    password VARCHAR(255) NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    phone VARCHAR(20),
+    level SMALLINT DEFAULT 10, -- 10: 슈퍼관리자
+    status CHAR(1) DEFAULT 'Y', -- Y: 활성, N: 비활성, D: 삭제
+    login_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 인덱스
-CREATE INDEX idx_super_admins_username ON super_admins(username);
-CREATE INDEX idx_super_admins_email ON super_admins(email);
-CREATE INDEX idx_super_admins_active ON super_admins(is_active);
+CREATE INDEX idx_admins_status ON admins(status) WHERE status = 'Y';
+CREATE INDEX idx_admins_level ON admins(level);
 
 -- 트리거: updated_at 자동 업데이트
 CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS $
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$ language 'plpgsql';
 
-CREATE TRIGGER update_super_admins_updated_at 
-    BEFORE UPDATE ON super_admins 
+CREATE TRIGGER update_admins_updated_at 
+    BEFORE UPDATE ON admins 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 ```
 
-### 2. 이벤트 테이블 (events)
+### 2. 이벤트 관리자 테이블 (managers)
 
 ```sql
-CREATE TABLE events (
+CREATE TABLE managers (
     id SERIAL PRIMARY KEY,
-    event_code VARCHAR(20) UNIQUE NOT NULL,
-    title VARCHAR(200) NOT NULL,
-    description TEXT,
-    image_url VARCHAR(500),
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    is_active BOOLEAN DEFAULT true,
-    is_deleted CHAR(1) DEFAULT 'N',
-    created_by INTEGER REFERENCES super_admins(id),
+    event_id INTEGER NOT NULL REFERENCES events(id),
+    username VARCHAR(30) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    phone VARCHAR(20),
+    level SMALLINT DEFAULT 1, -- 1: 일반, 2: 매니저, 3: 책임자
+    status CHAR(1) DEFAULT 'Y', -- Y: 활성, N: 비활성, D: 삭제
+    admin_id INTEGER REFERENCES admins(id), -- 생성한 관리자
+    login_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 인덱스
-CREATE UNIQUE INDEX idx_events_code_active ON events(event_code) WHERE is_deleted = 'N';
-CREATE INDEX idx_events_active ON events(is_active, is_deleted);
-CREATE INDEX idx_events_date_range ON events(start_date, end_date);
-CREATE INDEX idx_events_created_by ON events(created_by);
+CREATE UNIQUE INDEX idx_managers_username ON managers(username) WHERE status != 'D';
+CREATE INDEX idx_managers_event_status ON managers(event_id, status);
+CREATE INDEX idx_managers_level ON managers(level);
+
+-- 트리거
+CREATE TRIGGER update_managers_updated_at 
+    BEFORE UPDATE ON managers 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+```
+
+---
+
+## 🎪 이벤트 및 상품 테이블
+
+### 3. 이벤트 테이블 (events)
+
+```sql
+CREATE TABLE events (
+    id SERIAL PRIMARY KEY,
+    code VARCHAR(20) UNIQUE NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    description TEXT,
+    venue VARCHAR(200), -- 장소
+    image VARCHAR(500),
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    status CHAR(1) DEFAULT 'Y', -- Y: 활성, N: 비활성, D: 삭제, E: 종료
+    admin_id INTEGER REFERENCES admins(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 인덱스
+CREATE UNIQUE INDEX idx_events_code ON events(code) WHERE status != 'D';
+CREATE INDEX idx_events_dates ON events(start_date, end_date) WHERE status = 'Y';
+CREATE INDEX idx_events_status ON events(status);
 
 -- 트리거
 CREATE TRIGGER update_events_updated_at 
@@ -312,90 +368,30 @@ CREATE TRIGGER update_events_updated_at
 -- 제약조건
 ALTER TABLE events ADD CONSTRAINT chk_events_date_range 
     CHECK (end_date >= start_date);
-ALTER TABLE events ADD CONSTRAINT chk_events_is_deleted 
-    CHECK (is_deleted IN ('Y', 'N'));
 ```
 
-### 3. 이벤트 관리자 테이블 (event_managers)
+### 4. 회원 테이블 (members) - 구매자
 
 ```sql
-CREATE TABLE event_managers (
+CREATE TABLE members (
     id SERIAL PRIMARY KEY,
-    event_id INTEGER NOT NULL REFERENCES events(id),
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    full_name VARCHAR(100) NOT NULL,
-    permission_level INTEGER DEFAULT 2,
-    is_active BOOLEAN DEFAULT true,
-    is_deleted CHAR(1) DEFAULT 'N',
-    created_by INTEGER REFERENCES super_admins(id),
+    name VARCHAR(50) NOT NULL,
+    phone VARCHAR(20) UNIQUE NOT NULL,
+    email VARCHAR(100),
+    memo TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 인덱스
-CREATE UNIQUE INDEX idx_event_managers_username_active ON event_managers(username) WHERE is_deleted = 'N';
-CREATE UNIQUE INDEX idx_event_managers_email_active ON event_managers(email) WHERE is_deleted = 'N';
-CREATE INDEX idx_event_managers_event ON event_managers(event_id, is_deleted);
-CREATE INDEX idx_event_managers_permission ON event_managers(permission_level);
-CREATE INDEX idx_event_managers_active ON event_managers(is_active, is_deleted);
+CREATE INDEX idx_members_phone ON members(phone);
+CREATE INDEX idx_members_email ON members(email) WHERE email IS NOT NULL;
 
 -- 트리거
-CREATE TRIGGER update_event_managers_updated_at 
-    BEFORE UPDATE ON event_managers 
+CREATE TRIGGER update_members_updated_at 
+    BEFORE UPDATE ON members 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- 제약조건
-ALTER TABLE event_managers ADD CONSTRAINT chk_event_managers_permission 
-    CHECK (permission_level BETWEEN 1 AND 9);
-ALTER TABLE event_managers ADD CONSTRAINT chk_event_managers_is_deleted 
-    CHECK (is_deleted IN ('Y', 'N'));
-
--- 권한 레벨 정의
-COMMENT ON COLUMN event_managers.permission_level IS '1:조회전용, 2:일반관리자, 3:담당자, 9:슈퍼관리자';
 ```
-
-### 4. 관리자 활동 로그 테이블 (admin_activity_logs)
-
-```sql
-CREATE TABLE admin_activity_logs (
-    id SERIAL PRIMARY KEY,
-    admin_id INTEGER NOT NULL,
-    event_id INTEGER,
-    admin_type VARCHAR(20) NOT NULL, -- 'super_admin', 'event_manager'
-    action_type VARCHAR(50) NOT NULL, -- 'CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT'
-    target_table VARCHAR(50),
-    target_id INTEGER,
-    old_data JSONB,
-    new_data JSONB,
-    ip_address INET,
-    user_agent TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 인덱스
-CREATE INDEX idx_admin_activity_logs_admin ON admin_activity_logs(admin_id, admin_type);
-CREATE INDEX idx_admin_activity_logs_event ON admin_activity_logs(event_id);
-CREATE INDEX idx_admin_activity_logs_action ON admin_activity_logs(action_type);
-CREATE INDEX idx_admin_activity_logs_created_at ON admin_activity_logs(created_at DESC);
-CREATE INDEX idx_admin_activity_logs_target ON admin_activity_logs(target_table, target_id);
-
--- 파티셔닝 (월별)
-CREATE TABLE admin_activity_logs_y2025m01 PARTITION OF admin_activity_logs
-    FOR VALUES FROM ('2025-01-01') TO ('2025-02-01');
-CREATE TABLE admin_activity_logs_y2025m02 PARTITION OF admin_activity_logs
-    FOR VALUES FROM ('2025-02-01') TO ('2025-03-01');
--- 추가 파티션은 스크립트로 자동 생성
-
--- 제약조건
-ALTER TABLE admin_activity_logs ADD CONSTRAINT chk_admin_activity_logs_admin_type 
-    CHECK (admin_type IN ('super_admin', 'event_manager'));
-```
-
----
-
-## 🎫 티켓 및 주문 테이블
 
 ### 5. 상품 테이블 (products)
 
@@ -405,21 +401,19 @@ CREATE TABLE products (
     event_id INTEGER NOT NULL REFERENCES events(id),
     name VARCHAR(200) NOT NULL,
     description TEXT,
-    base_price DECIMAL(10, 2) NOT NULL,
-    base_stock INTEGER NOT NULL DEFAULT 0,
-    current_stock INTEGER NOT NULL DEFAULT 0,
-    is_active BOOLEAN DEFAULT true,
-    is_deleted CHAR(1) DEFAULT 'N',
-    created_by INTEGER NOT NULL,
+    price INTEGER NOT NULL DEFAULT 0,
+    stock INTEGER NOT NULL DEFAULT 0,
+    sold INTEGER NOT NULL DEFAULT 0,
+    sort INTEGER DEFAULT 0, -- 정렬 순서
+    status CHAR(1) DEFAULT 'Y', -- Y: 판매중, N: 판매중지, D: 삭제
+    admin_id INTEGER NOT NULL, -- 생성한 관리자
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 인덱스
-CREATE INDEX idx_products_event ON products(event_id, is_deleted);
-CREATE INDEX idx_products_active ON products(is_active, is_deleted);
-CREATE INDEX idx_products_stock ON products(current_stock);
-CREATE INDEX idx_products_created_by ON products(created_by);
+CREATE INDEX idx_products_event_status ON products(event_id, status);
+CREATE INDEX idx_products_sort ON products(event_id, sort, id);
 
 -- 트리거
 CREATE TRIGGER update_products_updated_at 
@@ -428,91 +422,66 @@ CREATE TRIGGER update_products_updated_at
 
 -- 제약조건
 ALTER TABLE products ADD CONSTRAINT chk_products_price_positive 
-    CHECK (base_price >= 0);
+    CHECK (price >= 0);
 ALTER TABLE products ADD CONSTRAINT chk_products_stock_non_negative 
-    CHECK (base_stock >= 0 AND current_stock >= 0);
-ALTER TABLE products ADD CONSTRAINT chk_products_is_deleted 
-    CHECK (is_deleted IN ('Y', 'N'));
+    CHECK (stock >= 0 AND sold >= 0);
 ```
 
-### 6. 상품 옵션 테이블 (product_options)
+### 6. 상품 옵션 테이블 (options)
 
 ```sql
-CREATE TABLE product_options (
+CREATE TABLE options (
     id SERIAL PRIMARY KEY,
     product_id INTEGER NOT NULL REFERENCES products(id),
-    option_name VARCHAR(100) NOT NULL, -- '성인', '청소년', '어린이'
-    price_adjustment DECIMAL(10, 2) DEFAULT 0, -- 기본 가격 대비 조정액
-    stock_quantity INTEGER NOT NULL DEFAULT 0,
-    current_stock INTEGER NOT NULL DEFAULT 0,
-    is_active BOOLEAN DEFAULT true,
-    is_deleted CHAR(1) DEFAULT 'N',
+    name VARCHAR(100) NOT NULL, -- 옵션명 (성인, 청소년, 어린이 등)
+    price_add INTEGER DEFAULT 0, -- 추가금액 (음수 가능)
+    stock INTEGER NOT NULL DEFAULT 0,
+    sold INTEGER NOT NULL DEFAULT 0,
+    sort INTEGER DEFAULT 0,
+    status CHAR(1) DEFAULT 'Y', -- Y: 활성, N: 비활성, D: 삭제
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 인덱스
-CREATE INDEX idx_product_options_product ON product_options(product_id, is_deleted);
-CREATE INDEX idx_product_options_active ON product_options(is_active, is_deleted);
-CREATE INDEX idx_product_options_stock ON product_options(current_stock);
+CREATE INDEX idx_options_product_status ON options(product_id, status);
+CREATE INDEX idx_options_sort ON options(product_id, sort, id);
 
 -- 트리거
-CREATE TRIGGER update_product_options_updated_at 
-    BEFORE UPDATE ON product_options 
+CREATE TRIGGER update_options_updated_at 
+    BEFORE UPDATE ON options 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- 제약조건
-ALTER TABLE product_options ADD CONSTRAINT chk_product_options_stock_non_negative 
-    CHECK (stock_quantity >= 0 AND current_stock >= 0);
-ALTER TABLE product_options ADD CONSTRAINT chk_product_options_is_deleted 
-    CHECK (is_deleted IN ('Y', 'N'));
+ALTER TABLE options ADD CONSTRAINT chk_options_stock_non_negative 
+    CHECK (stock >= 0 AND sold >= 0);
 ```
 
-### 7. 고객 테이블 (customers)
+---
 
-```sql
-CREATE TABLE customers (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    phone VARCHAR(20) UNIQUE NOT NULL,
-    email VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+## 🛍 주문 및 결제 테이블
 
--- 인덱스
-CREATE UNIQUE INDEX idx_customers_phone ON customers(phone);
-CREATE INDEX idx_customers_email ON customers(email);
-CREATE INDEX idx_customers_name ON customers(name);
-
--- 트리거
-CREATE TRIGGER update_customers_updated_at 
-    BEFORE UPDATE ON customers 
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-```
-
-### 8. 주문 테이블 (orders)
+### 7. 주문 테이블 (orders)
 
 ```sql
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
     event_id INTEGER NOT NULL REFERENCES events(id),
-    customer_id INTEGER NOT NULL REFERENCES customers(id),
-    order_number VARCHAR(50) UNIQUE NOT NULL,
-    total_amount DECIMAL(10, 2) NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'paid', 'cancelled', 'refunded'
-    visit_date DATE NOT NULL,
+    member_id INTEGER NOT NULL REFERENCES members(id),
+    order_no VARCHAR(30) UNIQUE NOT NULL, -- 주문번호
+    amount INTEGER NOT NULL, -- 총 금액
+    status VARCHAR(20) DEFAULT 'pending', -- pending, paid, cancelled, refunded
+    visit_date DATE NOT NULL, -- 방문 예정일
+    memo TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 인덱스
-CREATE UNIQUE INDEX idx_orders_order_number ON orders(order_number);
-CREATE INDEX idx_orders_event ON orders(event_id);
-CREATE INDEX idx_orders_customer ON orders(customer_id);
-CREATE INDEX idx_orders_status ON orders(status);
-CREATE INDEX idx_orders_visit_date ON orders(visit_date);
-CREATE INDEX idx_orders_created_at ON orders(created_at DESC);
+CREATE INDEX idx_orders_event_status ON orders(event_id, status);
+CREATE INDEX idx_orders_member ON orders(member_id);
+CREATE INDEX idx_orders_visit ON orders(visit_date);
+CREATE INDEX idx_orders_created ON orders(created_at DESC);
 
 -- 트리거
 CREATE TRIGGER update_orders_updated_at 
@@ -521,60 +490,57 @@ CREATE TRIGGER update_orders_updated_at
 
 -- 제약조건
 ALTER TABLE orders ADD CONSTRAINT chk_orders_amount_positive 
-    CHECK (total_amount >= 0);
+    CHECK (amount >= 0);
 ALTER TABLE orders ADD CONSTRAINT chk_orders_status 
     CHECK (status IN ('pending', 'paid', 'cancelled', 'refunded'));
 ```
 
-### 9. 주문 상품 테이블 (order_items)
+### 8. 주문 상품 테이블 (items)
 
 ```sql
-CREATE TABLE order_items (
+CREATE TABLE items (
     id SERIAL PRIMARY KEY,
     order_id INTEGER NOT NULL REFERENCES orders(id),
     product_id INTEGER NOT NULL REFERENCES products(id),
-    product_option_id INTEGER REFERENCES product_options(id),
-    item_name VARCHAR(200) NOT NULL,
-    quantity INTEGER NOT NULL,
-    unit_price DECIMAL(10, 2) NOT NULL,
-    total_price DECIMAL(10, 2) NOT NULL,
+    option_id INTEGER REFERENCES options(id),
+    name VARCHAR(200) NOT NULL, -- 상품명 (구매 시점)
+    price INTEGER NOT NULL, -- 단가 (구매 시점)
+    quantity INTEGER NOT NULL DEFAULT 1,
+    amount INTEGER NOT NULL, -- 소계
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 인덱스
-CREATE INDEX idx_order_items_order ON order_items(order_id);
-CREATE INDEX idx_order_items_product ON order_items(product_id);
-CREATE INDEX idx_order_items_option ON order_items(product_option_id);
+CREATE INDEX idx_items_order ON items(order_id);
+CREATE INDEX idx_items_product ON items(product_id);
 
 -- 제약조건
-ALTER TABLE order_items ADD CONSTRAINT chk_order_items_quantity_positive 
+ALTER TABLE items ADD CONSTRAINT chk_items_quantity_positive 
     CHECK (quantity > 0);
-ALTER TABLE order_items ADD CONSTRAINT chk_order_items_price_positive 
-    CHECK (unit_price >= 0 AND total_price >= 0);
+ALTER TABLE items ADD CONSTRAINT chk_items_price_positive 
+    CHECK (price >= 0 AND amount >= 0);
 ```
 
-### 10. 결제 테이블 (payments)
+### 9. 결제 테이블 (payments)
 
 ```sql
 CREATE TABLE payments (
     id SERIAL PRIMARY KEY,
     order_id INTEGER NOT NULL REFERENCES orders(id),
-    payment_key VARCHAR(100) UNIQUE NOT NULL,
-    payment_method VARCHAR(50) NOT NULL, -- 'card', 'transfer', 'virtual_account'
-    amount DECIMAL(10, 2) NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'success', 'failed', 'cancelled'
-    toss_payment_id VARCHAR(100),
-    payment_data JSONB, -- 토스페이먼츠 응답 데이터
+    pay_key VARCHAR(100) UNIQUE NOT NULL, -- 결제 고유키
+    method VARCHAR(30) NOT NULL, -- card, transfer, virtual
+    amount INTEGER NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending', -- pending, success, failed, cancelled
+    pg_tid VARCHAR(100), -- PG사 거래번호
+    pg_data JSONB, -- PG사 응답 데이터
+    paid_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 인덱스
-CREATE UNIQUE INDEX idx_payments_payment_key ON payments(payment_key);
 CREATE INDEX idx_payments_order ON payments(order_id);
 CREATE INDEX idx_payments_status ON payments(status);
-CREATE INDEX idx_payments_toss_id ON payments(toss_payment_id);
-CREATE INDEX idx_payments_created_at ON payments(created_at DESC);
 
 -- 트리거
 CREATE TRIGGER update_payments_updated_at 
@@ -588,38 +554,55 @@ ALTER TABLE payments ADD CONSTRAINT chk_payments_status
     CHECK (status IN ('pending', 'success', 'failed', 'cancelled'));
 ```
 
-### 11. QR 티켓 테이블 (qr_tickets)
+---
+
+## 🎫 티켓 및 입장 테이블
+
+### 10. 티켓 테이블 (tickets)
 
 ```sql
-CREATE TABLE qr_tickets (
+CREATE TABLE tickets (
     id SERIAL PRIMARY KEY,
     order_id INTEGER NOT NULL REFERENCES orders(id),
-    order_item_id INTEGER NOT NULL REFERENCES order_items(id),
-    qr_code VARCHAR(100) UNIQUE NOT NULL,
-    ticket_type VARCHAR(50) NOT NULL, -- '성인', '청소년', '어린이'
-    is_used BOOLEAN DEFAULT false,
+    item_id INTEGER NOT NULL REFERENCES items(id),
+    code VARCHAR(50) UNIQUE NOT NULL, -- QR 코드
+    type VARCHAR(30) NOT NULL, -- 티켓 유형
+    used CHAR(1) DEFAULT 'N', -- Y: 사용, N: 미사용
     used_at TIMESTAMP,
-    used_by INTEGER, -- event_managers.id
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    used_by INTEGER, -- 사용 처리한 관리자
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 인덱스
-CREATE UNIQUE INDEX idx_qr_tickets_qr_code ON qr_tickets(qr_code);
-CREATE INDEX idx_qr_tickets_order ON qr_tickets(order_id);
-CREATE INDEX idx_qr_tickets_order_item ON qr_tickets(order_item_id);
-CREATE INDEX idx_qr_tickets_used ON qr_tickets(is_used, used_at);
-CREATE INDEX idx_qr_tickets_used_by ON qr_tickets(used_by);
+CREATE INDEX idx_tickets_order ON tickets(order_id);
+CREATE INDEX idx_tickets_used ON tickets(used, used_at);
+```
 
--- 트리거
-CREATE TRIGGER update_qr_tickets_updated_at 
-    BEFORE UPDATE ON qr_tickets 
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+### 11. 입장 기록 테이블 (entrances)
+
+```sql
+CREATE TABLE entrances (
+    id SERIAL PRIMARY KEY,
+    ticket_id INTEGER NOT NULL REFERENCES tickets(id),
+    manager_id INTEGER NOT NULL, -- 처리한 관리자
+    type VARCHAR(20) DEFAULT 'normal', -- normal, vip, comp
+    device VARCHAR(100), -- 스캔 디바이스 정보
+    memo TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 인덱스
+CREATE INDEX idx_entrances_ticket ON entrances(ticket_id);
+CREATE INDEX idx_entrances_created ON entrances(created_at DESC);
+
+-- 제약조건
+ALTER TABLE entrances ADD CONSTRAINT chk_entrances_type 
+    CHECK (type IN ('normal', 'vip', 'comp'));
 ```
 
 ---
 
-## 📢 공지사항 및 파일 테이블
+## 📄 기타 테이블
 
 ### 12. 공지사항 테이블 (notices)
 
@@ -629,18 +612,17 @@ CREATE TABLE notices (
     event_id INTEGER NOT NULL REFERENCES events(id),
     title VARCHAR(300) NOT NULL,
     content TEXT NOT NULL,
-    is_pinned BOOLEAN DEFAULT false,
-    is_active BOOLEAN DEFAULT true,
-    created_by INTEGER NOT NULL,
+    hit INTEGER DEFAULT 0, -- 조회수
+    pin CHAR(1) DEFAULT 'N', -- Y: 상단고정
+    status CHAR(1) DEFAULT 'Y', -- Y: 게시, N: 미게시
+    admin_id INTEGER NOT NULL, -- 작성자
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 인덱스
-CREATE INDEX idx_notices_event ON notices(event_id, is_active);
-CREATE INDEX idx_notices_pinned ON notices(is_pinned, is_active);
-CREATE INDEX idx_notices_created_by ON notices(created_by);
-CREATE INDEX idx_notices_created_at ON notices(created_at DESC);
+CREATE INDEX idx_notices_event_status ON notices(event_id, status);
+CREATE INDEX idx_notices_pin ON notices(event_id, pin, id DESC);
 
 -- 트리거
 CREATE TRIGGER update_notices_updated_at 
@@ -648,50 +630,70 @@ CREATE TRIGGER update_notices_updated_at
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 ```
 
-### 13. 공지사항 첨부파일 테이블 (notice_files)
+### 13. 첨부파일 테이블 (files) - 범용
 
 ```sql
-CREATE TABLE notice_files (
+CREATE TABLE files (
     id SERIAL PRIMARY KEY,
-    notice_id INTEGER NOT NULL REFERENCES notices(id) ON DELETE CASCADE,
-    original_filename VARCHAR(255) NOT NULL,
-    stored_filename VARCHAR(255) NOT NULL,
-    file_path VARCHAR(500) NOT NULL,
-    file_size INTEGER NOT NULL,
-    content_type VARCHAR(100) NOT NULL,
+    table_name VARCHAR(30) NOT NULL, -- notices, events 등
+    table_id INTEGER NOT NULL, -- 해당 테이블의 ID
+    name VARCHAR(255) NOT NULL, -- 원본 파일명
+    path VARCHAR(500) NOT NULL, -- 저장 경로
+    size INTEGER NOT NULL,
+    type VARCHAR(100), -- MIME type
+    sort INTEGER DEFAULT 0,
+    downloads INTEGER DEFAULT 0, -- 다운로드 수
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 인덱스
-CREATE INDEX idx_notice_files_notice ON notice_files(notice_id);
-CREATE INDEX idx_notice_files_stored_filename ON notice_files(stored_filename);
-
--- 제약조건
-ALTER TABLE notice_files ADD CONSTRAINT chk_notice_files_size_positive 
-    CHECK (file_size > 0);
+CREATE INDEX idx_files_table ON files(table_name, table_id);
 ```
 
-### 14. 입장 로그 테이블 (entrance_logs)
+### 14. 활동 로그 테이블 (logs) - 파티셔닝
 
 ```sql
-CREATE TABLE entrance_logs (
+CREATE TABLE logs (
+    id BIGSERIAL,
+    user_id INTEGER NOT NULL,
+    user_type VARCHAR(20) NOT NULL, -- admin, manager
+    event_id INTEGER,
+    action VARCHAR(50) NOT NULL, -- login, logout, create, update, delete
+    target VARCHAR(50), -- 대상 테이블
+    target_id INTEGER, -- 대상 ID
+    data JSONB, -- 변경 데이터
+    ip INET,
+    agent TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) PARTITION BY RANGE (created_at);
+
+-- 월별 파티션
+CREATE TABLE logs_2025_07 PARTITION OF logs
+    FOR VALUES FROM ('2025-07-01') TO ('2025-08-01');
+
+-- 인덱스
+CREATE INDEX idx_logs_user ON logs(user_id, user_type);
+CREATE INDEX idx_logs_event ON logs(event_id) WHERE event_id IS NOT NULL;
+CREATE INDEX idx_logs_created ON logs(created_at DESC);
+```
+
+### 15. 통계 요약 테이블 (stats) - 성능 최적화
+
+```sql
+CREATE TABLE stats (
     id SERIAL PRIMARY KEY,
-    qr_ticket_id INTEGER NOT NULL REFERENCES qr_tickets(id),
-    processed_by INTEGER NOT NULL, -- event_managers.id
-    entrance_type VARCHAR(20) DEFAULT 'normal', -- 'normal', 'invitation'
-    device_info TEXT,
-    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    event_id INTEGER NOT NULL REFERENCES events(id),
+    date DATE NOT NULL,
+    orders INTEGER DEFAULT 0, -- 주문 수
+    sales INTEGER DEFAULT 0, -- 매출액
+    tickets INTEGER DEFAULT 0, -- 발권 수
+    entrances INTEGER DEFAULT 0, -- 입장 수
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(event_id, date)
 );
 
 -- 인덱스
-CREATE INDEX idx_entrance_logs_qr_ticket ON entrance_logs(qr_ticket_id);
-CREATE INDEX idx_entrance_logs_processed_by ON entrance_logs(processed_by);
-CREATE INDEX idx_entrance_logs_processed_at ON entrance_logs(processed_at DESC);
-CREATE INDEX idx_entrance_logs_entrance_type ON entrance_logs(entrance_type);
-
--- 제약조건
-ALTER TABLE entrance_logs ADD CONSTRAINT chk_entrance_logs_entrance_type 
-    CHECK (entrance_type IN ('normal', 'invitation'));
+CREATE INDEX idx_stats_event_date ON stats(event_id, date DESC);
 ```
 
 ---
@@ -702,32 +704,56 @@ ALTER TABLE entrance_logs ADD CONSTRAINT chk_entrance_logs_entrance_type
 
 ```sql
 -- 이벤트별 활성 상품 조회 최적화
-CREATE INDEX idx_products_event_active_stock ON products(event_id, is_active, is_deleted, current_stock);
+CREATE INDEX idx_products_event_active_stock ON products(event_id, status, stock);
 
 -- 주문 조회 최적화 (관리자 대시보드용)
 CREATE INDEX idx_orders_event_status_date ON orders(event_id, status, visit_date DESC);
 
--- QR 티켓 사용 통계 최적화
-CREATE INDEX idx_qr_tickets_order_used ON qr_tickets(order_id, is_used, used_at);
+-- 티켓 사용 통계 최적화
+CREATE INDEX idx_tickets_order_used ON tickets(order_id, used, used_at);
 
 -- 관리자 활동 추적 최적화
-CREATE INDEX idx_admin_activity_logs_event_admin_date ON admin_activity_logs(event_id, admin_id, created_at DESC);
+CREATE INDEX idx_logs_event_user_date ON logs(event_id, user_id, created_at DESC);
 
 -- 실시간 재고 조회 최적화
-CREATE INDEX idx_product_options_product_active_stock ON product_options(product_id, is_active, is_deleted, current_stock);
+CREATE INDEX idx_options_product_active_stock ON options(product_id, status, stock);
 ```
 
 ### 파티셔닝 전략
 
 ```sql
 -- 활동 로그 테이블 월별 파티셔닝
-ALTER TABLE admin_activity_logs PARTITION BY RANGE (created_at);
+ALTER TABLE logs PARTITION BY RANGE (created_at);
 
--- 주문 테이블 연도별 파티셔닝 (대용량 데이터 예상 시)
--- ALTER TABLE orders PARTITION BY RANGE (created_at);
+-- 입장 로그 테이블 월별 파티셔닝  
+CREATE TABLE entrances_2025_07 PARTITION OF entrances
+    FOR VALUES FROM ('2025-07-01') TO ('2025-08-01');
 
--- 입장 로그 테이블 월별 파티셔닝
-ALTER TABLE entrance_logs PARTITION BY RANGE (processed_at);
+-- 파티션 자동 생성 함수
+CREATE OR REPLACE FUNCTION create_monthly_partitions()
+RETURNS void AS $
+DECLARE
+    start_date DATE;
+    end_date DATE;
+    partition_name TEXT;
+BEGIN
+    start_date := DATE_TRUNC('month', CURRENT_DATE);
+    end_date := start_date + INTERVAL '1 month';
+    
+    -- logs 파티션
+    partition_name := 'logs_' || TO_CHAR(start_date, 'YYYY_MM');
+    EXECUTE format('CREATE TABLE IF NOT EXISTS %I PARTITION OF logs
+        FOR VALUES FROM (%L) TO (%L)', partition_name, start_date, end_date);
+    
+    -- entrances 파티션
+    partition_name := 'entrances_' || TO_CHAR(start_date, 'YYYY_MM');
+    EXECUTE format('CREATE TABLE IF NOT EXISTS %I PARTITION OF entrances
+        FOR VALUES FROM (%L) TO (%L)', partition_name, start_date, end_date);
+END;
+$ LANGUAGE plpgsql;
+
+-- 매월 실행
+SELECT cron.schedule('create-partitions', '0 0 1 * *', 'SELECT create_monthly_partitions()');
 ```
 
 ---
@@ -738,22 +764,22 @@ ALTER TABLE entrance_logs PARTITION BY RANGE (processed_at);
 
 ```sql
 -- 슈퍼 관리자 초기 계정 생성
-INSERT INTO super_admins (username, email, password_hash, full_name) VALUES
-('superadmin', 'super@ticket-system.com', '$2b$12$example_hashed_password', '시스템 관리자'),
-('admin', 'admin@ticket-system.com', '$2b$12$example_hashed_password', '운영 관리자');
+INSERT INTO admins (username, email, password, name, level) VALUES
+('superadmin', 'super@ticket-system.com', '$2b$12$example_hashed_password', '시스템 관리자', 10),
+('admin', 'admin@ticket-system.com', '$2b$12$example_hashed_password', '운영 관리자', 10);
 ```
 
 ### 테스트 이벤트 데이터
 
 ```sql
 -- 테스트 이벤트 생성
-INSERT INTO events (event_code, title, description, start_date, end_date, created_by) VALUES
-('AAA', '서울 아트 페어 2025', '2025년 서울에서 열리는 대규모 아트 페어', '2025-08-01', '2025-08-10', 1),
-('BBB', '부산 음악 축제 2025', '2025년 부산에서 열리는 K-POP 음악 축제', '2025-09-15', '2025-09-17', 1),
-('CCC', '대구 푸드 페스티벌 2025', '2025년 대구 특색 음식 축제', '2025-10-05', '2025-10-07', 1);
+INSERT INTO events (code, name, description, venue, start_date, end_date, admin_id) VALUES
+('AAA', '서울 아트 페어 2025', '2025년 서울에서 열리는 대규모 아트 페어', '서울 코엑스', '2025-08-01', '2025-08-10', 1),
+('BBB', '부산 음악 축제 2025', '2025년 부산에서 열리는 K-POP 음악 축제', '부산 해운대 해수욕장', '2025-09-15', '2025-09-17', 1),
+('CCC', '대구 푸드 페스티벌 2025', '2025년 대구 특색 음식 축제', '대구 광장', '2025-10-05', '2025-10-07', 1);
 
 -- 테스트 관리자 계정 생성
-INSERT INTO event_managers (event_id, username, email, password_hash, full_name, permission_level, created_by) VALUES
+INSERT INTO managers (event_id, username, email, password, name, level, admin_id) VALUES
 (1, 'manager_aaa', 'manager.aaa@ticket-system.com', '$2b$12$example_hashed_password', 'AAA 이벤트 담당자', 3, 1),
 (2, 'manager_bbb', 'manager.bbb@ticket-system.com', '$2b$12$example_hashed_password', 'BBB 이벤트 담당자', 3, 1),
 (3, 'manager_ccc', 'manager.ccc@ticket-system.com', '$2b$12$example_hashed_password', 'CCC 이벤트 담당자', 3, 1),
@@ -764,65 +790,86 @@ INSERT INTO event_managers (event_id, username, email, password_hash, full_name,
 
 ```sql
 -- AAA 이벤트 상품
-INSERT INTO products (event_id, name, description, base_price, base_stock, current_stock, created_by) VALUES
-(1, 'AAA 일반 입장권', '서울 아트 페어 일반 입장권', 25000, 5000, 5000, 1),
-(1, 'AAA VIP 입장권', '서울 아트 페어 VIP 입장권 (전용 라운지 이용 가능)', 50000, 500, 500, 1);
+INSERT INTO products (event_id, name, description, price, stock, admin_id) VALUES
+(1, 'AAA 일반 입장권', '서울 아트 페어 일반 입장권', 25000, 5000, 1),
+(1, 'AAA VIP 입장권', '서울 아트 페어 VIP 입장권 (전용 라운지 이용 가능)', 50000, 500, 1);
 
 -- BBB 이벤트 상품
-INSERT INTO products (event_id, name, description, base_price, base_stock, current_stock, created_by) VALUES
-(2, 'BBB 1일권', '부산 음악 축제 1일 입장권', 80000, 10000, 10000, 2),
-(2, 'BBB 3일권', '부산 음악 축제 3일 패키지 입장권', 200000, 3000, 3000, 2);
+INSERT INTO products (event_id, name, description, price, stock, admin_id) VALUES
+(2, 'BBB 1일권', '부산 음악 축제 1일 입장권', 80000, 10000, 2),
+(2, 'BBB 3일권', '부산 음악 축제 3일 패키지 입장권', 200000, 3000, 2);
 
 -- CCC 이벤트 상품
-INSERT INTO products (event_id, name, description, base_price, base_stock, current_stock, created_by) VALUES
-(3, 'CCC 일반권', '대구 푸드 페스티벌 일반 입장권', 15000, 8000, 8000, 3),
-(3, 'CCC 시식권', '대구 푸드 페스티벌 시식 체험권', 30000, 2000, 2000, 3);
+INSERT INTO products (event_id, name, description, price, stock, admin_id) VALUES
+(3, 'CCC 일반권', '대구 푸드 페스티벌 일반 입장권', 15000, 8000, 3),
+(3, 'CCC 시식권', '대구 푸드 페스티벌 시식 체험권', 30000, 2000, 3);
 ```
 
 ### 상품 옵션 데이터
 
 ```sql
 -- AAA 일반 입장권 옵션
-INSERT INTO product_options (product_id, option_name, price_adjustment, stock_quantity, current_stock) VALUES
-(1, '성인', 0, 3000, 3000),
-(1, '청소년', -5000, 1000, 1000),
-(1, '어린이', -10000, 1000, 1000);
+INSERT INTO options (product_id, name, price_add, stock) VALUES
+(1, '성인', 0, 3000),
+(1, '청소년', -5000, 1000),
+(1, '어린이', -10000, 1000);
 
 -- AAA VIP 입장권 옵션
-INSERT INTO product_options (product_id, option_name, price_adjustment, stock_quantity, current_stock) VALUES
-(2, '성인', 0, 400, 400),
-(2, '청소년', -10000, 100, 100);
+INSERT INTO options (product_id, name, price_add, stock) VALUES
+(2, '성인', 0, 400),
+(2, '청소년', -10000, 100);
 
 -- BBB 1일권 옵션
-INSERT INTO product_options (product_id, option_name, price_adjustment, stock_quantity, current_stock) VALUES
-(3, '성인', 0, 6000, 6000),
-(3, '청소년', -20000, 2000, 2000),
-(3, '어린이', -30000, 2000, 2000);
+INSERT INTO options (product_id, name, price_add, stock) VALUES
+(3, '성인', 0, 6000),
+(3, '청소년', -20000, 2000),
+(3, '어린이', -30000, 2000);
 
 -- BBB 3일권 옵션
-INSERT INTO product_options (product_id, option_name, price_adjustment, stock_quantity, current_stock) VALUES
-(4, '성인', 0, 2000, 2000),
-(4, '청소년', -50000, 1000, 1000);
+INSERT INTO options (product_id, name, price_add, stock) VALUES
+(4, '성인', 0, 2000),
+(4, '청소년', -50000, 1000);
 
 -- CCC 일반권 옵션
-INSERT INTO product_options (product_id, option_name, price_adjustment, stock_quantity, current_stock) VALUES
-(5, '성인', 0, 5000, 5000),
-(5, '청소년', -3000, 1500, 1500),
-(5, '어린이', -5000, 1500, 1500);
+INSERT INTO options (product_id, name, price_add, stock) VALUES
+(5, '성인', 0, 5000),
+(5, '청소년', -3000, 1500),
+(5, '어린이', -5000, 1500);
 
 -- CCC 시식권 옵션
-INSERT INTO product_options (product_id, option_name, price_adjustment, stock_quantity, current_stock) VALUES
-(6, '성인', 0, 1500, 1500),
-(6, '청소년', -5000, 500, 500);
+INSERT INTO options (product_id, name, price_add, stock) VALUES
+(6, '성인', 0, 1500),
+(6, '청소년', -5000, 500);
 ```
 
 ### 테스트 공지사항 데이터
 
 ```sql
 -- 이벤트별 공지사항
-INSERT INTO notices (event_id, title, content, is_pinned, created_by) VALUES
-(1, '서울 아트 페어 2025 개최 안내', '올해로 5회째를 맞는 서울 아트 페어가 8월 1일부터 10일까지 개최됩니다. 많은 관심과 참여 부탁드립니다.', true, 1),
-(1, '주차장 이용 안내', '행사 기간 중 주차장이 혼잡할 수 있으니 대중교통 이용을 권장합니다.', false, 1),
+INSERT INTO notices (event_id, title, content, pin, admin_id) VALUES
+(1, '서울 아트 페어 2025 개최 안내', '올해로 5회째를 맞는 서울 아트 페어가 8월 1일부터 10일까지 개최됩니다. 많은 관심과 참여 부탁드립니다.', 'Y', 1),
+(1, '주차장 이용 안내', '행사 기간 중 주차장이 혼잡할 수 있으니 대중교통 이용을 권장합니다.', 'N', 1),
+(2, '부산 음악 축제 2025 라인업 공개', 'BTS, 블랙핑크, 뉴진스 등 최고의 K-POP 아티스트들이 함께합니다!', 'Y', 2),
+(2, '우천 시 진행 안내', '소나기 정도의 비는 진행하며, 태풍 등 악천후 시에는 일정이 변경될 수 있습니다.', 'N', 2),
+(3, '대구 푸드 페스티벌 참여 업체 소개', '대구 지역 유명 맛집 50여 곳이 참여하여 특별한 메뉴를 선보입니다.', 'Y', 3);
+```
+
+---
+
+## 🚀 다음 단계
+
+이 데이터베이스 스키마를 기반으로 다음 문서들을 작성할 예정입니다:
+
+1. **[백엔드 API 및 서비스](ticket_backend.md)** - FastAPI 구조와 권한 기반 API 설계
+2. **[프론트엔드 구조 및 컴포넌트](ticket_frontend.md)** - Next.js 페이지 구조와 권한별 UI
+3. **[성능 최적화 및 보안](ticket_performance.md)** - 고성능 시스템 구현 방법
+
+데이터베이스 스키마가 v3.0으로 업데이트되었습니다! 💪
+
+---
+
+**작성일**: 2025.07.28  
+**작성자**: ilogini용을 권장합니다.', false, 1),
 (2, '부산 음악 축제 2025 라인업 공개', 'BTS, 블랙핑크, 뉴진스 등 최고의 K-POP 아티스트들이 함께합니다!', true, 2),
 (2, '우천 시 진행 안내', '소나기 정도의 비는 진행하며, 태풍 등 악천후 시에는 일정이 변경될 수 있습니다.', false, 2),
 (3, '대구 푸드 페스티벌 참여 업체 소개', '대구 지역 유명 맛집 50여 곳이 참여하여 특별한 메뉴를 선보입니다.', true, 3);
