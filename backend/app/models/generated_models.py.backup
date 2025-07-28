@@ -1,0 +1,386 @@
+from typing import List, Optional
+
+from sqlalchemy import BigInteger, Boolean, CHAR, CheckConstraint, Column, Date, DateTime, ForeignKeyConstraint, Index, Integer, Numeric, PrimaryKeyConstraint, String, Table, Text, UniqueConstraint, text
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+import datetime
+import decimal
+
+class Base(DeclarativeBase):
+    pass
+
+
+class Customers(Base):
+    __tablename__ = 'customers'
+    __table_args__ = (
+        PrimaryKeyConstraint('id', name='customers_pkey'),
+        UniqueConstraint('phone', name='customers_phone_key'),
+        Index('idx_customers_email', 'email'),
+        Index('idx_customers_name', 'name'),
+        Index('idx_customers_phone', 'phone', unique=True)
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    phone: Mapped[str] = mapped_column(String(20))
+    email: Mapped[Optional[str]] = mapped_column(String(100))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+
+    orders: Mapped[List['Orders']] = relationship('Orders', back_populates='customer')
+
+
+class SuperAdmins(Base):
+    __tablename__ = 'super_admins'
+    __table_args__ = (
+        PrimaryKeyConstraint('id', name='super_admins_pkey'),
+        UniqueConstraint('email', name='super_admins_email_key'),
+        UniqueConstraint('username', name='super_admins_username_key'),
+        Index('idx_super_admins_active', 'is_active'),
+        Index('idx_super_admins_email', 'email'),
+        Index('idx_super_admins_username', 'username')
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    username: Mapped[str] = mapped_column(String(50))
+    email: Mapped[str] = mapped_column(String(100))
+    password_hash: Mapped[str] = mapped_column(String(255))
+    full_name: Mapped[str] = mapped_column(String(100))
+    is_active: Mapped[Optional[bool]] = mapped_column(Boolean, server_default=text('true'))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+
+    events: Mapped[List['Events']] = relationship('Events', back_populates='super_admins')
+    event_managers: Mapped[List['EventManagers']] = relationship('EventManagers', back_populates='super_admins')
+
+
+t_v_connection_stats = Table(
+    'v_connection_stats', Base.metadata,
+    Column('database_name', String),
+    Column('state', Text),
+    Column('connection_count', BigInteger),
+    Column('max_query_duration_seconds', Numeric)
+)
+
+
+class Events(Base):
+    __tablename__ = 'events'
+    __table_args__ = (
+        CheckConstraint('end_date >= start_date', name='chk_events_date_range'),
+        CheckConstraint("is_deleted = ANY (ARRAY['Y'::bpchar, 'N'::bpchar])", name='chk_events_is_deleted'),
+        ForeignKeyConstraint(['created_by'], ['super_admins.id'], name='events_created_by_fkey'),
+        PrimaryKeyConstraint('id', name='events_pkey'),
+        UniqueConstraint('event_code', name='events_event_code_key'),
+        Index('idx_events_active', 'is_active', 'is_deleted'),
+        Index('idx_events_code_active', 'event_code', unique=True),
+        Index('idx_events_created_by', 'created_by'),
+        Index('idx_events_date_range', 'start_date', 'end_date')
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    event_code: Mapped[str] = mapped_column(String(20))
+    title: Mapped[str] = mapped_column(String(200))
+    start_date: Mapped[datetime.date] = mapped_column(Date)
+    end_date: Mapped[datetime.date] = mapped_column(Date)
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    image_url: Mapped[Optional[str]] = mapped_column(String(500))
+    is_active: Mapped[Optional[bool]] = mapped_column(Boolean, server_default=text('true'))
+    is_deleted: Mapped[Optional[str]] = mapped_column(CHAR(1), server_default=text("'N'::bpchar"))
+    created_by: Mapped[Optional[int]] = mapped_column(Integer)
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+
+    super_admins: Mapped[Optional['SuperAdmins']] = relationship('SuperAdmins', back_populates='events')
+    event_managers: Mapped[List['EventManagers']] = relationship('EventManagers', back_populates='event')
+    notices: Mapped[List['Notices']] = relationship('Notices', back_populates='event')
+    orders: Mapped[List['Orders']] = relationship('Orders', back_populates='event')
+    products: Mapped[List['Products']] = relationship('Products', back_populates='event')
+
+
+class EventManagers(Base):
+    __tablename__ = 'event_managers'
+    __table_args__ = (
+        CheckConstraint("is_deleted = ANY (ARRAY['Y'::bpchar, 'N'::bpchar])", name='chk_event_managers_is_deleted'),
+        CheckConstraint('permission_level >= 1 AND permission_level <= 9', name='chk_event_managers_permission'),
+        ForeignKeyConstraint(['created_by'], ['super_admins.id'], name='event_managers_created_by_fkey'),
+        ForeignKeyConstraint(['event_id'], ['events.id'], name='event_managers_event_id_fkey'),
+        PrimaryKeyConstraint('id', name='event_managers_pkey'),
+        UniqueConstraint('email', name='event_managers_email_key'),
+        UniqueConstraint('username', name='event_managers_username_key'),
+        Index('idx_event_managers_active', 'is_active', 'is_deleted'),
+        Index('idx_event_managers_email_active', 'email', unique=True),
+        Index('idx_event_managers_event', 'event_id', 'is_deleted'),
+        Index('idx_event_managers_permission', 'permission_level'),
+        Index('idx_event_managers_username_active', 'username', unique=True)
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    event_id: Mapped[int] = mapped_column(Integer)
+    username: Mapped[str] = mapped_column(String(50))
+    email: Mapped[str] = mapped_column(String(100))
+    password_hash: Mapped[str] = mapped_column(String(255))
+    full_name: Mapped[str] = mapped_column(String(100))
+    permission_level: Mapped[Optional[int]] = mapped_column(Integer, server_default=text('2'), comment='1:조회전용, 2:일반관리자, 3:담당자, 9:슈퍼관리자')
+    is_active: Mapped[Optional[bool]] = mapped_column(Boolean, server_default=text('true'))
+    is_deleted: Mapped[Optional[str]] = mapped_column(CHAR(1), server_default=text("'N'::bpchar"))
+    created_by: Mapped[Optional[int]] = mapped_column(Integer)
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+
+    super_admins: Mapped[Optional['SuperAdmins']] = relationship('SuperAdmins', back_populates='event_managers')
+    event: Mapped['Events'] = relationship('Events', back_populates='event_managers')
+
+
+class Notices(Base):
+    __tablename__ = 'notices'
+    __table_args__ = (
+        ForeignKeyConstraint(['event_id'], ['events.id'], name='notices_event_id_fkey'),
+        PrimaryKeyConstraint('id', name='notices_pkey'),
+        Index('idx_notices_created_at', 'created_at'),
+        Index('idx_notices_created_by', 'created_by'),
+        Index('idx_notices_event', 'event_id', 'is_active'),
+        Index('idx_notices_pinned', 'is_pinned', 'is_active')
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    event_id: Mapped[int] = mapped_column(Integer)
+    title: Mapped[str] = mapped_column(String(300))
+    content: Mapped[str] = mapped_column(Text)
+    created_by: Mapped[int] = mapped_column(Integer)
+    is_pinned: Mapped[Optional[bool]] = mapped_column(Boolean, server_default=text('false'))
+    is_active: Mapped[Optional[bool]] = mapped_column(Boolean, server_default=text('true'))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+
+    event: Mapped['Events'] = relationship('Events', back_populates='notices')
+    notice_files: Mapped[List['NoticeFiles']] = relationship('NoticeFiles', back_populates='notice')
+
+
+class Orders(Base):
+    __tablename__ = 'orders'
+    __table_args__ = (
+        CheckConstraint("status::text = ANY (ARRAY['pending'::character varying, 'paid'::character varying, 'cancelled'::character varying, 'refunded'::character varying]::text[])", name='chk_orders_status'),
+        CheckConstraint('total_amount >= 0::numeric', name='chk_orders_amount_positive'),
+        ForeignKeyConstraint(['customer_id'], ['customers.id'], name='orders_customer_id_fkey'),
+        ForeignKeyConstraint(['event_id'], ['events.id'], name='orders_event_id_fkey'),
+        PrimaryKeyConstraint('id', name='orders_pkey'),
+        UniqueConstraint('order_number', name='orders_order_number_key'),
+        Index('idx_orders_created_at', 'created_at'),
+        Index('idx_orders_customer', 'customer_id'),
+        Index('idx_orders_event', 'event_id'),
+        Index('idx_orders_event_status_date', 'event_id', 'status', 'visit_date'),
+        Index('idx_orders_order_number', 'order_number', unique=True),
+        Index('idx_orders_status', 'status'),
+        Index('idx_orders_visit_date', 'visit_date')
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    event_id: Mapped[int] = mapped_column(Integer)
+    customer_id: Mapped[int] = mapped_column(Integer)
+    order_number: Mapped[str] = mapped_column(String(50))
+    total_amount: Mapped[decimal.Decimal] = mapped_column(Numeric(10, 2))
+    visit_date: Mapped[datetime.date] = mapped_column(Date)
+    status: Mapped[Optional[str]] = mapped_column(String(20), server_default=text("'pending'::character varying"))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+
+    customer: Mapped['Customers'] = relationship('Customers', back_populates='orders')
+    event: Mapped['Events'] = relationship('Events', back_populates='orders')
+    payments: Mapped[List['Payments']] = relationship('Payments', back_populates='order')
+    order_items: Mapped[List['OrderItems']] = relationship('OrderItems', back_populates='order')
+    qr_tickets: Mapped[List['QrTickets']] = relationship('QrTickets', back_populates='order')
+
+
+class Products(Base):
+    __tablename__ = 'products'
+    __table_args__ = (
+        CheckConstraint('base_price >= 0::numeric', name='chk_products_price_positive'),
+        CheckConstraint('base_stock >= 0 AND current_stock >= 0', name='chk_products_stock_non_negative'),
+        CheckConstraint("is_deleted = ANY (ARRAY['Y'::bpchar, 'N'::bpchar])", name='chk_products_is_deleted'),
+        ForeignKeyConstraint(['event_id'], ['events.id'], name='products_event_id_fkey'),
+        PrimaryKeyConstraint('id', name='products_pkey'),
+        Index('idx_products_active', 'is_active', 'is_deleted'),
+        Index('idx_products_created_by', 'created_by'),
+        Index('idx_products_event', 'event_id', 'is_deleted'),
+        Index('idx_products_event_active_stock', 'event_id', 'is_active', 'is_deleted', 'current_stock'),
+        Index('idx_products_stock', 'current_stock')
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    event_id: Mapped[int] = mapped_column(Integer)
+    name: Mapped[str] = mapped_column(String(200))
+    base_price: Mapped[decimal.Decimal] = mapped_column(Numeric(10, 2))
+    base_stock: Mapped[int] = mapped_column(Integer, server_default=text('0'))
+    current_stock: Mapped[int] = mapped_column(Integer, server_default=text('0'))
+    created_by: Mapped[int] = mapped_column(Integer)
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    is_active: Mapped[Optional[bool]] = mapped_column(Boolean, server_default=text('true'))
+    is_deleted: Mapped[Optional[str]] = mapped_column(CHAR(1), server_default=text("'N'::bpchar"))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+
+    event: Mapped['Events'] = relationship('Events', back_populates='products')
+    product_options: Mapped[List['ProductOptions']] = relationship('ProductOptions', back_populates='product')
+    order_items: Mapped[List['OrderItems']] = relationship('OrderItems', back_populates='product')
+
+
+class NoticeFiles(Base):
+    __tablename__ = 'notice_files'
+    __table_args__ = (
+        CheckConstraint('file_size > 0', name='chk_notice_files_size_positive'),
+        ForeignKeyConstraint(['notice_id'], ['notices.id'], ondelete='CASCADE', name='notice_files_notice_id_fkey'),
+        PrimaryKeyConstraint('id', name='notice_files_pkey'),
+        Index('idx_notice_files_notice', 'notice_id'),
+        Index('idx_notice_files_stored_filename', 'stored_filename')
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    notice_id: Mapped[int] = mapped_column(Integer)
+    original_filename: Mapped[str] = mapped_column(String(255))
+    stored_filename: Mapped[str] = mapped_column(String(255))
+    file_path: Mapped[str] = mapped_column(String(500))
+    file_size: Mapped[int] = mapped_column(Integer)
+    content_type: Mapped[str] = mapped_column(String(100))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+
+    notice: Mapped['Notices'] = relationship('Notices', back_populates='notice_files')
+
+
+class Payments(Base):
+    __tablename__ = 'payments'
+    __table_args__ = (
+        CheckConstraint('amount >= 0::numeric', name='chk_payments_amount_positive'),
+        CheckConstraint("status::text = ANY (ARRAY['pending'::character varying, 'success'::character varying, 'failed'::character varying, 'cancelled'::character varying]::text[])", name='chk_payments_status'),
+        ForeignKeyConstraint(['order_id'], ['orders.id'], name='payments_order_id_fkey'),
+        PrimaryKeyConstraint('id', name='payments_pkey'),
+        UniqueConstraint('payment_key', name='payments_payment_key_key'),
+        Index('idx_payments_created_at', 'created_at'),
+        Index('idx_payments_order', 'order_id'),
+        Index('idx_payments_payment_key', 'payment_key', unique=True),
+        Index('idx_payments_status', 'status'),
+        Index('idx_payments_toss_id', 'toss_payment_id')
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    order_id: Mapped[int] = mapped_column(Integer)
+    payment_key: Mapped[str] = mapped_column(String(100))
+    payment_method: Mapped[str] = mapped_column(String(50))
+    amount: Mapped[decimal.Decimal] = mapped_column(Numeric(10, 2))
+    status: Mapped[Optional[str]] = mapped_column(String(20), server_default=text("'pending'::character varying"))
+    toss_payment_id: Mapped[Optional[str]] = mapped_column(String(100))
+    payment_data: Mapped[Optional[dict]] = mapped_column(JSONB)
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+
+    order: Mapped['Orders'] = relationship('Orders', back_populates='payments')
+
+
+class ProductOptions(Base):
+    __tablename__ = 'product_options'
+    __table_args__ = (
+        CheckConstraint("is_deleted = ANY (ARRAY['Y'::bpchar, 'N'::bpchar])", name='chk_product_options_is_deleted'),
+        CheckConstraint('stock_quantity >= 0 AND current_stock >= 0', name='chk_product_options_stock_non_negative'),
+        ForeignKeyConstraint(['product_id'], ['products.id'], name='product_options_product_id_fkey'),
+        PrimaryKeyConstraint('id', name='product_options_pkey'),
+        Index('idx_product_options_active', 'is_active', 'is_deleted'),
+        Index('idx_product_options_product', 'product_id', 'is_deleted'),
+        Index('idx_product_options_product_active_stock', 'product_id', 'is_active', 'is_deleted', 'current_stock'),
+        Index('idx_product_options_stock', 'current_stock')
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    product_id: Mapped[int] = mapped_column(Integer)
+    option_name: Mapped[str] = mapped_column(String(100))
+    stock_quantity: Mapped[int] = mapped_column(Integer, server_default=text('0'))
+    current_stock: Mapped[int] = mapped_column(Integer, server_default=text('0'))
+    price_adjustment: Mapped[Optional[decimal.Decimal]] = mapped_column(Numeric(10, 2), server_default=text('0'))
+    is_active: Mapped[Optional[bool]] = mapped_column(Boolean, server_default=text('true'))
+    is_deleted: Mapped[Optional[str]] = mapped_column(CHAR(1), server_default=text("'N'::bpchar"))
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+
+    product: Mapped['Products'] = relationship('Products', back_populates='product_options')
+    order_items: Mapped[List['OrderItems']] = relationship('OrderItems', back_populates='product_option')
+
+
+class OrderItems(Base):
+    __tablename__ = 'order_items'
+    __table_args__ = (
+        CheckConstraint('quantity > 0', name='chk_order_items_quantity_positive'),
+        CheckConstraint('unit_price >= 0::numeric AND total_price >= 0::numeric', name='chk_order_items_price_positive'),
+        ForeignKeyConstraint(['order_id'], ['orders.id'], name='order_items_order_id_fkey'),
+        ForeignKeyConstraint(['product_id'], ['products.id'], name='order_items_product_id_fkey'),
+        ForeignKeyConstraint(['product_option_id'], ['product_options.id'], name='order_items_product_option_id_fkey'),
+        PrimaryKeyConstraint('id', name='order_items_pkey'),
+        Index('idx_order_items_option', 'product_option_id'),
+        Index('idx_order_items_order', 'order_id'),
+        Index('idx_order_items_product', 'product_id')
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    order_id: Mapped[int] = mapped_column(Integer)
+    product_id: Mapped[int] = mapped_column(Integer)
+    item_name: Mapped[str] = mapped_column(String(200))
+    quantity: Mapped[int] = mapped_column(Integer)
+    unit_price: Mapped[decimal.Decimal] = mapped_column(Numeric(10, 2))
+    total_price: Mapped[decimal.Decimal] = mapped_column(Numeric(10, 2))
+    product_option_id: Mapped[Optional[int]] = mapped_column(Integer)
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+
+    order: Mapped['Orders'] = relationship('Orders', back_populates='order_items')
+    product: Mapped['Products'] = relationship('Products', back_populates='order_items')
+    product_option: Mapped[Optional['ProductOptions']] = relationship('ProductOptions', back_populates='order_items')
+    qr_tickets: Mapped[List['QrTickets']] = relationship('QrTickets', back_populates='order_item')
+
+
+class QrTickets(Base):
+    __tablename__ = 'qr_tickets'
+    __table_args__ = (
+        ForeignKeyConstraint(['order_id'], ['orders.id'], name='qr_tickets_order_id_fkey'),
+        ForeignKeyConstraint(['order_item_id'], ['order_items.id'], name='qr_tickets_order_item_id_fkey'),
+        PrimaryKeyConstraint('id', name='qr_tickets_pkey'),
+        UniqueConstraint('qr_code', name='qr_tickets_qr_code_key'),
+        Index('idx_qr_tickets_order', 'order_id'),
+        Index('idx_qr_tickets_order_item', 'order_item_id'),
+        Index('idx_qr_tickets_order_used', 'order_id', 'is_used', 'used_at'),
+        Index('idx_qr_tickets_qr_code', 'qr_code', unique=True),
+        Index('idx_qr_tickets_used', 'is_used', 'used_at'),
+        Index('idx_qr_tickets_used_by', 'used_by')
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    order_id: Mapped[int] = mapped_column(Integer)
+    order_item_id: Mapped[int] = mapped_column(Integer)
+    qr_code: Mapped[str] = mapped_column(String(100))
+    ticket_type: Mapped[str] = mapped_column(String(50))
+    is_used: Mapped[Optional[bool]] = mapped_column(Boolean, server_default=text('false'))
+    used_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime)
+    used_by: Mapped[Optional[int]] = mapped_column(Integer)
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+
+    order: Mapped['Orders'] = relationship('Orders', back_populates='qr_tickets')
+    order_item: Mapped['OrderItems'] = relationship('OrderItems', back_populates='qr_tickets')
+    entrance_logs: Mapped[List['EntranceLogs']] = relationship('EntranceLogs', back_populates='qr_ticket')
+
+
+class EntranceLogs(Base):
+    __tablename__ = 'entrance_logs'
+    __table_args__ = (
+        CheckConstraint("entrance_type::text = ANY (ARRAY['normal'::character varying, 'invitation'::character varying]::text[])", name='chk_entrance_logs_entrance_type'),
+        ForeignKeyConstraint(['qr_ticket_id'], ['qr_tickets.id'], name='entrance_logs_qr_ticket_id_fkey'),
+        PrimaryKeyConstraint('id', name='entrance_logs_pkey'),
+        Index('idx_entrance_logs_entrance_type', 'entrance_type'),
+        Index('idx_entrance_logs_processed_at', 'processed_at'),
+        Index('idx_entrance_logs_processed_by', 'processed_by'),
+        Index('idx_entrance_logs_qr_ticket', 'qr_ticket_id')
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    qr_ticket_id: Mapped[int] = mapped_column(Integer)
+    processed_by: Mapped[int] = mapped_column(Integer)
+    entrance_type: Mapped[Optional[str]] = mapped_column(String(20), server_default=text("'normal'::character varying"))
+    device_info: Mapped[Optional[str]] = mapped_column(Text)
+    processed_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+
+    qr_ticket: Mapped['QrTickets'] = relationship('QrTickets', back_populates='entrance_logs')

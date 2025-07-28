@@ -134,7 +134,7 @@ backend/
 │   │   ├── product.py             # 상품 모델
 │   │   ├── order.py               # 주문 모델
 │   │   ├── payment.py             # 결제 모델
-│   │   ├── qr_ticket.py           # QR 티켓 모델
+│   │   ├── ticket.py           # QR 티켓 모델
 │   │   ├── notice.py              # 공지사항 모델
 │   │   └── activity_log.py        # 활동 로그 모델
 │   │
@@ -240,8 +240,7 @@ backend/
 ├── .env.example                   # 환경변수 예시
 ├── .env                           # 환경변수 (실제)
 ├── alembic.ini                    # Alembic 설정
-├── pytest.ini                    # pytest 설정
-└── Dockerfile                     # Docker 설정 (옵션)
+└── pytest.ini                    # pytest 설정
 ```
 
 ---

@@ -1,0 +1,12 @@
+from fastapi import APIRouter
+
+from app.api.auth import super_admin, event_manager
+from app.api import super_admin as super_admin_api
+from app.api import event_manager as event_manager_api
+from app.api import public
+
+router = APIRouter()
+
+# Include all sub-routers
+router.include_router(super_admin.router, prefix="/super-admin", tags=["Super Admin Auth"])
+router.include_router(event_manager.router, prefix="/event-manager", tags=["Event Manager Auth"])
