@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     # Server
     SERVER_HOST: str = "0.0.0.0"
     SERVER_PORT: int = 8000
-    PROJECT_NAME: str = "Exhibition Ticket System"
+    PROJECT_NAME: str = "Ticket System"
     VERSION: str = "1.0.0"
     DEBUG: bool = True
     

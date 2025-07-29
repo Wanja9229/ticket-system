@@ -90,7 +90,7 @@ app.include_router(
 @app.get("/")
 async def root():
     return {
-        "message": "Exhibition Ticket System API",
+        "message": "Ticket System API",
         "version": settings.VERSION,
         "docs": "/docs" if settings.DEBUG else "Disabled"
     }
