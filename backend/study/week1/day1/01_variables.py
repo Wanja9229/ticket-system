@@ -11,6 +11,16 @@ name = "홍길동"
 age = 30
 print(f"이름: {name}, 나이: {age}")
 
+if age >= 20:
+    print("성인입니다.")
+    print('안녕')
+else:
+    print("미성년자입니다.")
+
+nm = "김기호"
+kind = "돼지띠"
+print(f"이름 : {nm}, 띠 : {kind}")
+
 print("\n=== 2. 자료형 ===")
 # 문자열
 text = "Python 문자열"  # PHP: $text = "PHP 문자열";
@@ -27,6 +37,34 @@ print("\n=== 3. 리스트 (PHP 배열) ===")
 fruits = ["사과", "바나나", "오렌지"]
 print(f"과일 목록: {fruits}")
 print(f"첫 번째 과일: {fruits[0]}")  # PHP: $fruits[0]
+
+sports = ["축구", "야구", "배구"]
+print(f"스포츠목록 중 1번 째  : {sports[0]}")
+print(f"스포츠목록 중 2번 째  : {sports[1]}")
+print(f"스포츠목록 중 3번 째  : {sports[2]}")
+
+sports.append("농구")  # PHP: array_push($sports, "농구");
+sports.insert(0, "농구2")  # PHP: array_push($sports, "농구");
+sports.extend(["컬링", "수영"]) # 여러 개 끝에 추가
+print(f"추가 후 스포츠 목록: {sports}")
+
+# 삭제 메서드들
+sports.remove("수영")       # 값으로 삭제 (첫 번째 것만)
+deleted = sports.pop()        # 마지막 요소 삭제하고 반환
+print(f"삭제 후 반환값: {deleted}")
+deleted = sports.pop(0)       # 특정 인덱스 삭제하고 반환
+print(f"삭제 후 반환값: {deleted}")
+# sports.clear()                # 모든 요소 삭제
+
+print(f"삭제 후 스포츠 목록: {sports}")
+          
+          
+# 기타 유용한 메서드
+numbers = [3, 1, 4, 1, 5]
+numbers.sort()                # 정렬 [1, 1, 3, 4, 5]
+numbers.reverse()             # 역순 [5, 4, 3, 1, 1]
+count = numbers.count(1)      # 특정 값의 개수: 2
+index = numbers.index(4)      # 특정 값의 인덱스: 1
 
 # 리스트에 추가
 fruits.append("포도")  # PHP: array_push($fruits, "포도");
