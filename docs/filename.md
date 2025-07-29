@@ -15,7 +15,7 @@
 
 ### ⚡ 백엔드 스터디  
 - **[백엔드 스터디 가이드](./backend-study.md)** - Python + FastAPI 4주 완성
-
+- **[백엔드 환경 설정](./backend-setup.md)** - 개발 환경 구축 가이드
 ### 🎫 프로젝트 문서
 - **[티켓 시스템 개요](./ticket_overview.md)** - 전체 프로젝트 소개
 - **[티켓 프론트엔드](./ticket_frontend.md)** - 프론트엔드 구조 및 기능
