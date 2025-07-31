@@ -14,6 +14,8 @@ print(f"이름: {name}, 나이: {age}")
 if age >= 20:
     print("성인입니다.")
     print('안녕')
+    print("성인입니다.")
+    print("성인입니다.")
 else:
     print("미성년자입니다.")
 
