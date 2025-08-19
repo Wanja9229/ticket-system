@@ -62,31 +62,31 @@ Python의 모듈, 파일 입출력, 예외 처리 기능을 종합적으로 활�
    {
        "name": "김철수",
        "birth_date": "1985-03-15",
-       "register_date": "2024-08-14",
+       "register_date": "2024-08-19 09:15:42",
        "password": "mypass123"
    },
    {
-       "name": "이영희",
+       "name": "이영희", 
        "birth_date": "1992-07-22",
-       "register_date": "2024-08-14", 
+       "register_date": "2024-08-19 09:16:18",
        "password": "secure456"
    },
    {
        "name": "박민수",
-       "birth_date": "1988-11-08",
-       "register_date": "2024-08-14",
+       "birth_date": "1988-11-08", 
+       "register_date": "2024-08-19 09:17:05",
        "password": "password789"
    },
    {
        "name": "최지은",
        "birth_date": "1995-01-30",
-       "register_date": "2024-08-14",
+       "register_date": "2024-08-19 09:17:52",
        "password": "mypassword"
    },
    {
        "name": "정현우",
-       "birth_date": "1990-09-12",
-       "register_date": "2024-08-14",
+       "birth_date": "1990-09-12", 
+       "register_date": "2024-08-19 09:18:30",
        "password": "qwerty123"
    }
 ]
