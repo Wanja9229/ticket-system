@@ -1,247 +1,257 @@
-"""
-main.py - 회원 관리 시스템 메인 프로그램
-이 파일은 프로그램의 시작점입니다.
-사용자와의 상호작용을 관리하고 다른 모듈들을 조정합니다.
-"""
-
-# 다른 모듈들을 가져옵니다 (별칭 사용)
-import member_management as mm  # 회원 관리 기능
-import file_handler as fh  # 파일 처리 기능
-import validators as val  # 입력 검증 기능
-import utils  # 유틸리티 기능
-
-# 상수를 가져옵니다
-from __init__ import DEFAULT_FILENAME, WELCOME_MESSAGE, EXIT_MESSAGE
-
-# 타입 힌트를 위한 import
+import json, os
+from datetime import datetime
 from typing import List, Dict
 
+# mem: members
+# name: name
+# birth_date: birth_date
+# register_date: register_date
+# password: password
 
-def main() -> None:
-    """
-    프로그램의 메인 함수입니다.
-    메뉴를 표시하고 사용자의 선택에 따라 적절한 기능을 실행합니다.
-    
-    반환값: None
-    """
-    # 프로그램 시작 메시지
-    print(WELCOME_MESSAGE)
-    print("=" * 50)
-    
-    # 메모리에 저장할 회원 리스트 초기화
-    # 이 리스트는 파일에 저장하기 전까지 임시로 데이터를 보관합니다
-    members: List[Dict[str, str]] = []
-    
-    # 메인 루프 - 사용자가 종료를 선택할 때까지 계속 실행
-    while True:
-        # 메뉴 표시
-        utils.show_menu()
-        
-        # 사용자 선택 받기
-        choice = utils.get_menu_choice()
-        
-        # 선택에 따른 기능 실행
-        if choice == '1':
-            # 1. 회원가입
-            handle_register(members)
-            
-        elif choice == '2':
-            # 2. 파일 저장
-            handle_save_to_file(members)
-            
-        elif choice == '3':
-            # 3. 회원 정보 조회
-            handle_search_member()
-            
-        elif choice == '4':
-            # 4. 전체 회원 목록 보기
-            handle_list_all_members()
-            
-        elif choice == '5':
-            # 5. 회원 정보 수정
-            handle_update_member()
-            
-        elif choice == '6':
-            # 6. 파일 삭제
-            handle_delete_file()
-            
-        elif choice == '7':
-            # 7. 프로그램 종료
-            if handle_exit(members):
-                break
-            
-        else:
-            # 잘못된 입력 처리
-            print("❌ 잘못된 메뉴 번호입니다. 1-7 사이의 숫자를 입력하세요.")
-        
-        # 각 작업 후 Enter 키를 눌러 계속 진행
-        utils.press_enter_to_continue()
+DF_FN = "members.json"  # default filename
 
+# 현재 날짜와 시간을 문자열 형태로 반환하는 함수
+# 회원 등록일시를 기록하는데 사용되며, "YYYY-MM-DD HH:MM:SS" 형식으로 반환
+def now() -> str:
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-def handle_register(members: List[Dict[str, str]]) -> None:
-    """
-    회원가입 기능을 처리하는 함수입니다.
-    
-    매개변수:
-        members: 현재 메모리에 저장된 회원 리스트
-    
-    반환값: None
-    """
-    mm.register_member(members)
+# 사용자에게 y/n 질문을 던지고 불린값으로 결과를 반환하는 함수
+# 삭제 확인, 종료 확인 등 중요한 작업 전 사용자 의사를 확인할 때 사용
+def yn(msg: str) -> bool:
+    return input(f"{msg} (y/n): ").strip().lower() == 'y'
 
+# 메뉴를 화면에 출력하고 사용자의 선택을 입력받아 반환하는 함수
+# 1-7번까지의 메뉴 옵션을 제공하고 사용자가 입력한 번호를 문자열로 반환
+def menu() -> str:
+    print("\n===== 메뉴 =====")
+    print("1. 회원가입")
+    print("2. 파일 저장")
+    print("3. 회원 정보 조회")
+    print("4. 전체 회원 목록 보기")
+    print("5. 회원 정보 수정")
+    print("6. 회원 삭제")
+    print("7. 프로그램 종료")
+    return input("선택 (1-7): ").strip()
 
-def handle_save_to_file(members: List[Dict[str, str]]) -> None:
-    """
-    파일 저장 기능을 처리하는 함수입니다.
-    
-    매개변수:
-        members: 저장할 회원 리스트
-    
-    반환값: None
-    """
-    # 저장할 회원이 있는지 확인
-    if not members:
-        print("❌ 저장할 회원 정보가 없습니다. 먼저 회원가입을 진행하세요.")
-        return
-    
-    print("\n===== 파일 저장 =====")
-    
-    # 상수로 정의된 파일명 사용
-    filename = DEFAULT_FILENAME
-    
-    # 파일 저장 실행
-    mm.save_to_file(members, filename)
+# 회원 리스트를 JSON 파일로 저장하는 함수
+# 메모리상의 회원 데이터를 DF_FN 파일에 UTF-8 인코딩과 들여쓰기를 적용하여 저장
+# 저장 성공/실패 메시지를 출력하고 성공 여부를 불린값으로 반환
+def save(mem: List[Dict[str, str]]) -> bool:
+    try:
+        with open(DF_FN, 'w', encoding='utf-8') as f:
+            json.dump(mem, f, ensure_ascii=False, indent=2)
+        print(f"{DF_FN} 파일에 저장되었습니다.")
+        return True
+    except:
+        print("파일 저장에 실패했습니다.")
+        return False
 
+# JSON 파일에서 회원 리스트를 로드하는 함수
+# DF_FN 파일이 존재하지 않거나 읽기 실패 시 빈 리스트를 반환
+def load() -> List[Dict[str, str]]:
+    if not os.path.exists(DF_FN):
+        return []
+    try:
+        with open(DF_FN, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except:
+        return []
 
-def handle_search_member() -> None:
-    """
-    회원 정보 조회 기능을 처리하는 함수입니다.
-    
-    반환값: None
-    """
-    print("\n===== 회원 정보 조회 =====")
-    
-    # 파일명 입력받기
-    filename = input(f"파일명을 입력하세요 (기본값: {DEFAULT_FILENAME}): ").strip()
-    if not filename:
-        filename = DEFAULT_FILENAME
-    
-    # 파일 존재 여부 확인
-    if not fh.check_file_exists(filename):
-        print(f"❌ {filename} 파일을 찾을 수 없습니다.")
-        return
-    
-    # 조회할 회원 이름 입력받기
-    name = input("조회할 회원 이름을 입력하세요: ").strip()
+# 파일 존재 여부를 확인하는 함수
+# DF_FN 파일의 존재 여부를 불린값으로 반환하는 os.path.exists() 래퍼 함수
+def fchk() -> bool:
+    return os.path.exists(DF_FN)
+
+# 새로운 회원을 등록하는 함수
+# 이름, 생년월일, 패스워드를 입력받아 현재시간과 함께 메모리 리스트에 추가
+# 빈 입력 시 회원가입을 취소하며 완료 후 저장 안내 메시지 출력
+def reg(mem: List[Dict[str, str]]) -> None:
+    print("\n===== 회원가입 =====")
+    name = input("이름을 입력하세요: ").strip()
     if not name:
-        print("조회를 취소했습니다.")
+        print("회원가입을 취소했습니다.")
         return
     
-    # 회원 정보 조회 및 출력
-    mm.display_member_info(filename, name)
-
-
-def handle_list_all_members() -> None:
-    """
-    전체 회원 목록 보기 기능을 처리하는 함수입니다.
-    
-    반환값: None
-    """
-    print("\n===== 전체 회원 목록 보기 =====")
-    
-    # 파일명 입력받기
-    filename = input("파일명을 입력하세요 (기본값: members.json): ").strip()
-    if not filename:
-        filename = "members.json"
-    
-    # 파일 존재 여부 확인
-    if not fh.check_file_exists(filename):
-        print(f"❌ {filename} 파일을 찾을 수 없습니다.")
+    birth_date = input("생년월일을 입력하세요 (YYYY-MM-DD): ").strip()
+    if not birth_date:
+        print("회원가입을 취소했습니다.")
         return
     
-    # 전체 회원 목록 출력
-    mm.list_all_members(filename)
-
-
-def handle_update_member() -> None:
-    """
-    회원 정보 수정 기능을 처리하는 함수입니다.
-    
-    반환값: None
-    """
-    print("\n===== 회원 정보 수정 =====")
-    
-    # 파일명 입력받기
-    filename = input("파일명을 입력하세요 (기본값: members.json): ").strip()
-    if not filename:
-        filename = "members.json"
-    
-    # 파일 존재 여부 확인
-    if not fh.check_file_exists(filename):
-        print(f"❌ {filename} 파일을 찾을 수 없습니다.")
+    password = input("패스워드를 입력하세요: ").strip()
+    if not password:
+        print("회원가입을 취소했습니다.")
         return
     
-    # 수정할 회원 이름 입력받기
-    name = input("수정할 회원 이름을 입력하세요: ").strip()
-    if not name:
+    mem.append({"name": name, "birth_date": birth_date, "register_date": now(), "password": password})
+    print(f"\n{name}님의 회원가입이 완료되었습니다!")
+    print("파일로 저장하려면 '2. 파일 저장' 메뉴를 선택하세요.")
+
+# 메모리상의 회원 데이터를 파일로 저장하는 함수
+# save() 함수를 호출하여 실제 저장 작업을 수행하며 빈 리스트 체크 포함
+def sv(mem: List[Dict[str, str]]) -> None:
+    if not mem:
+        print("저장할 회원 정보가 없습니다.")
+        return
+    save(mem)
+
+# 파일에서 전체 회원 목록을 조회하여 출력하는 함수
+# 번호, 이름, 생년월일, 등록일시를 포함한 목록과 총 회원수를 출력
+def lst() -> None:
+    mem = load()
+    if not mem:
+        print("등록된 회원이 없습니다.")
+        return
+    print("\n===== 전체 회원 목록 =====")
+    for i,m in enumerate(mem,1):
+        print(f"{i}. {m['name']} | {m['birth_date']} | {m['register_date']}")
+    print(f"\n총 {len(mem)}명의 회원이 등록되어 있습니다.")
+
+# 특정 회원의 정보를 수정하는 함수
+# 파일에서 이름으로 회원을 찾아 생년월일 또는 패스워드를 수정하고 다시 파일에 저장
+def upd(name: str) -> None:
+    mem = load()
+    if not mem:
+        print("등록된 회원이 없습니다.")
+        return
+    idx = -1
+    for i,m in enumerate(mem):
+        if m['name']==name:
+            idx=i
+            break
+    if idx==-1:
+        print(f"'{name}' 회원을 찾을 수 없습니다.")
+        return
+    print("\n현재 회원 정보:")
+    print(mem[idx])
+    print("\n수정할 항목을 선택하세요:")
+    print("1. 생년월일")
+    print("2. 패스워드")
+    print("3. 취소")
+    c=input("선택 (1-3): ").strip()
+    if c=='1':
+        new_birth_date=input("새로운 생년월일 (YYYY-MM-DD): ").strip()
+        if not new_birth_date:
+            print("수정을 취소했습니다.")
+            return
+        mem[idx]['birth_date']=new_birth_date
+        print("생년월일이 수정되었습니다.")
+    elif c=='2':
+        new_password=input("새로운 패스워드: ").strip()
+        if not new_password:
+            print("수정을 취소했습니다.")
+            return
+        mem[idx]['password']=new_password
+        print("패스워드가 수정되었습니다.")
+    elif c=='3':
         print("수정을 취소했습니다.")
         return
-    
-    # 회원 정보 수정
-    mm.update_member(filename, name)
+    else:
+        print("잘못된 선택입니다.")
+        return
+    save(mem)
 
+# 특정 회원의 정보를 조회하여 출력하는 함수
+# 파일에서 이름으로 회원을 검색하여 상세 정보를 딕셔너리 형태로 출력
+def dsp(name: str) -> None:
+    mem = load()
+    for m in mem:
+        if m['name'] == name:
+            print("\n회원 정보:")
+            print({"이름":m['name'],"생년월일":m['birth_date'],"등록일시":m['register_date']})
+            return
+    print(f"'{name}' 회원을 찾을 수 없습니다.")
 
-def handle_delete_file() -> None:
-    """
-    파일 삭제 기능을 처리하는 함수입니다.
+# 회원을 삭제하는 함수
+# 전체 회원 목록을 먼저 보여주고 삭제할 회원을 선택받아 확인 후 삭제하고 파일에 저장
+def del_mem() -> None:
+    mem = load()
+    if not mem:
+        print("등록된 회원이 없습니다.")
+        return
     
-    반환값: None
-    """
-    print("\n===== 파일 삭제 =====")
+    # 먼저 회원 목록 보여주기
+    print("\n===== 등록된 회원 목록 =====")
+    for i,m in enumerate(mem,1):
+        print(f"{i}. {m['name']} | {m['birth_date']} | {m['register_date']}")
+    print(f"\n총 {len(mem)}명의 회원이 등록되어 있습니다.")
     
-    # 삭제할 파일명 입력받기
-    filename = input("삭제할 파일명을 입력하세요: ").strip()
-    if not filename:
+    name = input("\n삭제할 회원 이름: ").strip()
+    if not name:
         print("삭제를 취소했습니다.")
         return
     
-    # 파일 존재 여부 확인
-    if not fh.check_file_exists(filename):
-        print(f"❌ {filename} 파일을 찾을 수 없습니다.")
-        return
+    # 회원 찾기
+    for i, m in enumerate(mem):
+        if m['name'] == name:
+            print(f"\n삭제할 회원 정보:")
+            print(f"이름: {m['name']}")
+            print(f"생년월일: {m['birth_date']}")
+            print(f"등록일시: {m['register_date']}")
+            
+            if yn(f"정말로 '{name}' 회원을 삭제하시겠습니까?"):
+                mem.pop(i)
+                save(mem)
+                print(f"'{name}' 회원이 삭제되었습니다.")
+            else:
+                print("회원 삭제를 취소했습니다.")
+            return
     
-    # 삭제 확인
-    print(f"\n⚠️ 경고: {filename} 파일을 삭제하면 복구할 수 없습니다!")
-    if utils.get_yes_no_input("정말로 삭제하시겠습니까?"):
-        fh.delete_file(filename)
-    else:
-        print("파일 삭제를 취소했습니다.")
+    print(f"'{name}' 회원을 찾을 수 없습니다.")
 
-
-def handle_exit(members: List[Dict[str, str]]) -> bool:
-    """
-    프로그램 종료를 처리하는 함수입니다.
-    저장하지 않은 데이터가 있으면 경고합니다.
+# 프로그램의 메인 실행 함수
+# 메뉴를 반복 출력하고 사용자 선택에 따라 각 기능을 실행하며 저장되지 않은 데이터 관리
+def main() -> None:
+    print("회원 관리 시스템에 오신 것을 환영합니다!")
+    # 기존 파일이 있으면 미리 로드
+    mem = load() if fchk() else []
+    org_cnt = len(mem)  # 기존 회원 수 기록
     
-    매개변수:
-        members: 현재 메모리에 저장된 회원 리스트
-    
-    반환값: bool - 종료하면 True, 계속하면 False
-    """
-    # 메모리에 저장되지 않은 회원이 있는지 확인
-    if members:
-        print(f"\n⚠️ 주의: 메모리에 {len(members)}명의 저장되지 않은 회원 정보가 있습니다!")
-        print("종료하면 이 정보들은 사라집니다.")
-        
-        if not utils.get_yes_no_input("정말로 종료하시겠습니까?"):
-            return False
-    
-    print(f"\n{EXIT_MESSAGE}")
-    return True
+    while True:
+        c = menu()
+        if c=='1':
+            reg(mem)
+        elif c=='2':
+            sv(mem)
+            org_cnt = len(mem)  # 저장 후 기존 회원 수 업데이트
+        elif c=='3':
+            if not fchk():
+                print(f"{DF_FN} 파일을 찾을 수 없습니다.")
+                continue
+            nm=input("조회할 회원 이름: ").strip()
+            if nm:
+                dsp(nm)
+            else:
+                print("조회를 취소했습니다.")
+        elif c=='4':
+            if fchk():
+                lst()
+            else:
+                print(f"{DF_FN} 파일을 찾을 수 없습니다.")
+        elif c=='5':
+            if not fchk():
+                print(f"{DF_FN} 파일을 찾을 수 없습니다.")
+                continue
+            nm=input("수정할 회원 이름: ").strip()
+            if nm:
+                upd(nm)
+            else:
+                print("수정을 취소했습니다.")
+        elif c=='6':
+            if not fchk():
+                print(f"{DF_FN} 파일을 찾을 수 없습니다.")
+                continue
+            del_mem()
+        elif c=='7':
+            unsaved_cnt = len(mem) - org_cnt
+            if unsaved_cnt > 0:
+                print(f"\n주의: 메모리에 {unsaved_cnt}명의 저장되지 않은 회원 정보가 있습니다!")
+                if not yn("정말로 종료하시겠습니까?"):
+                    continue
+            print("\n프로그램을 종료합니다.")
+            break
+        else:
+            print("잘못된 메뉴 번호입니다. 1-7 사이의 숫자를 입력하세요.")
+        input("\n계속하려면 Enter 키를 누르세요...")
 
-
-# 프로그램 시작점
-# 이 파일을 직접 실행할 때만 main() 함수를 호출합니다
-# 다른 파일에서 import할 때는 실행되지 않습니다
-if __name__ == "__main__":
-    main()
+# 프로그램 실행
+main()
