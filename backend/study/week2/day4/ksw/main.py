@@ -3,14 +3,13 @@ from api.crud import *
 
 
 def main():
-    member_old()
     menu_dict = {
         1 : member_input,
         2 : member_list_get,
         3 : member_get,
         4 : member_update,
         5 : member_delete,
-        6 : file_save
+        6 : member_save
     }
     while True:
         menu_pop()
