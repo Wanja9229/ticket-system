@@ -46,9 +46,7 @@ class UIHelper:
     def get_filename_input(self, prompt: str) -> str:
         """파일명 입력 받기"""
         filename = input(f"{prompt} (예: members.json): ").strip()
-        if not filename.endswith('.json'):
-            filename += '.json'
-        return filename
+        return self.validator.sanitize_filename(filename)
     
     def get_delete_confirmation(self, filename: str) -> bool:
         """파일 삭제 확인"""
@@ -67,6 +65,12 @@ class UIHelper:
         """전체 회원 목록 출력"""
         print(f"\n총 {len(members)}명의 회원이 등록되어 있습니다.")
         print("-" * 80)
+
+        #{문자열:정렬방향너비}
+        # > = 오른쪽 정렬 (< = 왼쪽 정렬 - 기본값)
+        # 4 = 총 너비 4 칸
+        # ^ = 가운데 정렬
+        # 10 = 총 너비 10칸
         print(f"{'번호':>4} {'이름':^10} {'생년월일':^12} {'등록일':^12} {'패스워드':^10}")
         print("-" * 80)
         
@@ -97,11 +101,15 @@ class UIHelper:
     def get_new_password(self) -> str:
         """새로운 패스워드 입력"""
         return input("새로운 패스워드를 입력하세요: ").strip()
-        print(f"{'번호':>4} {'이름':^10} {'생년월일':^12} {'등록일':^12} {'패스워드':^10}")
-        print("-" * 80)
-        
-        for i, member in enumerate(members, 1):
-            masked_password = '*' * len(member['password'])  # 패스워드 마스킹
-            print(f"{i:>4} {member['name']:^10} {member['birth_date']:^12} {member['register_date']:^12} {masked_password:^10}")
-        
-        print("-" * 80)
+    
+
+
+
+    '''
+    print(f"{'번호':>4} {'이름':^10} {'생년월일':^12} {'등록일':^12} {'패스워드':^10}")
+    print("-" * 80)
+    for i, member in enumerate(members, 1):
+        masked_password = '*' * len(member['password'])  # 패스워드 마스킹
+        print(f"{i:>4} {member['name']:^10} {member['birth_date']:^12} {member['register_date']:^12} {masked_password:^10}")
+    print("-" * 80)
+    '''

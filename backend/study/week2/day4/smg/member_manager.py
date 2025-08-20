@@ -135,31 +135,7 @@ class MemberManager:
         else:
             print("파일 삭제가 취소되었습니다.")
     
-    def run(self) -> None:
-        """메인 실행 함수"""
-        while True:
-            self.ui_helper.show_menu()
-            choice = input("메뉴를 선택하세요 (1-7): ").strip()
-            
-            if choice == '1':
-                self.register_member()
-            elif choice == '2':
-                self.save_to_file()
-            elif choice == '3':
-                self.search_member()
-            elif choice == '4':
-                self.list_all_members()
-            elif choice == '5':
-                self.update_member()
-            elif choice == '6':
-                self.delete_file()
-            elif choice == '7':
-                print("프로그램을 종료합니다. 감사합니다!")
-                break
-            else:
-                print("잘못된 선택입니다. 1-7 사이의 숫자를 입력해주세요.")
-            
-            input("\n계속하려면 Enter 키를 누르세요...")
+
     
     def run(self) -> None:
         """메인 실행 함수"""
