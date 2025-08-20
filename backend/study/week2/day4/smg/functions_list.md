@@ -2,9 +2,11 @@
 
 ## main.py
 ### 전역 함수
-- `main()` - 메인 실행 함수
+
+# 메인 실행 함수
+def main():
 ### import 내용
-- from member_manager import MemberManager
+from member_manager import MemberManager
 
 ---
 

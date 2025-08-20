@@ -1,5 +1,5 @@
 # member_service.py - 회원 관련 비즈니스 로직
-import datetime
+from datetime import datetime
 from typing import List, Dict, Optional
 from validators import Validator
 
@@ -9,7 +9,7 @@ class MemberService:
     
     def create_member(self, member_data: Dict[str, str]) -> Dict[str, str]:
         """회원 정보 딕셔너리 생성"""
-        register_date = datetime.datetime.now().strftime("%Y-%m-%d")
+        register_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
         member = {
             "name": member_data["name"],
