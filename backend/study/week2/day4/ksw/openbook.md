@@ -17,6 +17,14 @@ def main():
 ### **menu.py**
 ```python
 def menu_pop():
+    print('====메뉴선택====')
+    print('1. 회원가입')
+    print('2. 전체회원조회')
+    print('3. 회원조회')
+    print('4. 회원수정')
+    print('5. 회원삭제')
+    print('6. 파일저장')
+    print('7. 프로그램종료')
     # 7개 메뉴 출력
 
 def menu_choice() -> int:
@@ -37,10 +45,15 @@ def date_input(text: str) -> str:
 def file_open() -> list[dict[str, str]]:
     # 파일 존재 확인
     # JSON 로드 또는 빈 리스트
+    with open('경로', '용도(읽기/쓰기/삭제)', encoding='utf-8') as f:
+        return json.load(f)
 
 def file_save(data: list[dict[str, str]]) -> bool:
     # 폴더 생성
-    # JSON 저장
+    os.makedirs('data', exist_ok=True)
+    # JSON 쓰기
+    with open('경로', '용도(읽기/쓰기/삭제)', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
     # 성공/실패 반환
 ```
 
@@ -52,6 +65,7 @@ def member_input():
     # 회원 정보 입력
     # 현재 시간 추가
     # 딕셔너리 생성 및 추가
+    # 날짜/시간 형식 : strftime('%Y-%m-%d %H:%M:%S')
 
 def member_list_get():
     # enumerate로 목록 출력
@@ -77,29 +91,4 @@ def member_save():
     # 현재/기존 데이터 비교
     # 저장 확인
     # 파일 저장 호출
-```
-
-## 🎯 핵심 패턴
-
-### **파일 I/O**
-```python
-# JSON 읽기
-with open('data/members.json', 'r', encoding='utf-8') as f:
-    return json.load(f)
-
-# JSON 쓰기  
-with open('data/members.json', 'w', encoding='utf-8') as f:
-    json.dump(data, f, ensure_ascii=False, indent=4)
-```
-
-### **JSON 데이터 구조**
-```json
-[
-    {
-        "name": "이름",
-        "birth_date": "YYYY-MM-DD",
-        "password": "비밀번호",
-        "register_date": "YYYY-MM-DD HH:MM:SS"
-    }
-]
 ```
