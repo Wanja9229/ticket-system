@@ -2,8 +2,6 @@
 
 ## main.py
 ### 전역 함수
-
-# 메인 실행 함수
 def main():
 ### import 내용
 from member_manager import MemberManager
@@ -116,9 +114,6 @@ def load_members_from_file(self, filename: str) -> Optional[List[Dict[str, str]]
 # 파일 삭제
 def delete_file(self, filename: str) -> bool:
 
-# 파일 존재 여부 확인
-def file_exists(self, filename: str) -> bool:
-
 ---
 
 ## ui_helper.py
@@ -197,5 +192,5 @@ def sanitize_filename(self, filename: str) -> str:
 ## 프로젝트 구조 요약
 - **총 6개 파일**
 - **총 5개 클래스** (MemberManager, MemberService, FileService, UIHelper, Validator)
-- **총 31개 함수** (전역 함수 1개 + 클래스 메서드 30개)
+- **총 30개 함수** (전역 함수 1개 + 클래스 메서드 29개)
 - **주요 기능**: 회원 관리, 파일 입출력, UI 처리, 데이터 검증

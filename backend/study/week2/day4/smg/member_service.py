@@ -1,60 +1,66 @@
-# member_service.py - 회원 관련 비즈니스 로직
+## member_service.py
+### import 내용
 from datetime import datetime
 from typing import List, Dict, Optional
 from validators import Validator
 
-class MemberService:
+### MemberService 클래스
+class MemberService():
+    # 생성자, Validator 초기화
     def __init__(self):
         self.validator = Validator()
-    
+
+    # 회원 정보 딕셔너리 생성
     def create_member(self, member_data: Dict[str, str]) -> Dict[str, str]:
-        """회원 정보 딕셔너리 생성"""
-        register_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
+        register_date = datetime.now().strftime("%Y-%M-%d %H:%M:%S")
         member = {
-            "name": member_data["name"],
-            "birth_date": member_data["birth_date"],
-            "register_date": register_date,
-            "password": member_data["password"]
+            "name" : member_data['name'],
+            "birth_date" : member_data['birth_date'],
+            "password" : member_data['password'],
+            "register_date" : register_date
         }
-        
+
         return member
     
+    # 이름으로 회원 찾기
     def find_member_by_name(self, members: List[Dict[str, str]], name: str) -> Optional[Dict[str, str]]:
-        """이름으로 회원 찾기"""
         for member in members:
             if member['name'] == name:
                 return member
         return None
-    
+
+
+    # 이름으로 회원 인덱스 찾기
     def find_member_index_by_name(self, members: List[Dict[str, str]], name: str) -> int:
-        """이름으로 회원 인덱스 찾기"""
         for i, member in enumerate(members):
             if member['name'] == name:
                 return i
         return -1
-    
+
+    # 수정할 회원 찾기, 인덱스와 에러 메시지 반환
     def find_member_for_update(self, members: List[Dict[str, str]], member_name: str) -> tuple[int, Optional[str]]:
-        """수정할 회원 찾기 - 인덱스와 에러 메시지 반환"""
         member_index = self.find_member_index_by_name(members, member_name)
-        
+
         if member_index == -1:
-            return -1, f"'{member_name}' 회원을 찾을 수 없습니다."
+            return -1, f" '{member_name}' 회원을 찾을 수 없습니다. "
         
         return member_index, None
+
     
+    # 생년월일 수정
     def update_birth_date(self, members: List[Dict[str, str]], member_index: int, new_birth_date: str) -> tuple[bool, str]:
-        """생년월일 수정"""
+        #생년월일이 날짜 형식에 맞는지 확인
         if not self.validator.validate_date(new_birth_date):
             return False, "생년월일 형식이 올바르지 않습니다."
         
         members[member_index]['birth_date'] = new_birth_date
-        return True, "생년월일이 수정되었습니다."
+        return True, "생년월일이 수정되었습니다"
     
+    # 패스워드 수정
     def update_password(self, members: List[Dict[str, str]], member_index: int, new_password: str) -> tuple[bool, str]:
-        """패스워드 수정"""
-        if not new_password.strip():
+        #패스워드 필수입력이기 떄문에 비어있는 지 확인
+        if not new_password:
             return False, "패스워드는 필수 입력 항목입니다."
-        
+    
         members[member_index]['password'] = new_password
-        return True, "패스워드가 수정되었습니다."
+        return True, "패스워드가 수정되었습니다"
