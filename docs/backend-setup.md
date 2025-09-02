@@ -138,15 +138,6 @@ source venv/bin/activate # wsl 접속 후 항상 입력하고 해줘야 함.
 pip install -r requirements.txt
 ```
 
----
-
-## ✅ 5. FastAPI + Uvicorn 설치
-
-```bash
-mkdir ~/ticket-system
-pip install -r requirements.txt
-```
-
 
 ---
 
@@ -191,6 +182,14 @@ chmod +x scripts/init_db.sh
 
 # 스크립트 실행
 ./scripts/init_db.sh
+
+# 만약 스크립트가 실행이 안된다면 아래거 실행
+sudo apt install -y dos2unix
+dos2unix ./scripts/init_db.sh
+chmod +x ./scripts/init_db.sh
+head -n1 ./scripts/init_db.sh
+bash -x ./scripts/init_db.sh
+./init_db.sh
 ```
 
 
