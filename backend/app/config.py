@@ -2,10 +2,11 @@ from pydantic_settings import BaseSettings
 from typing import List
 import secrets
 
+# .env 파일 또는 설정 파일에서
 
 class Settings(BaseSettings):
     # Database
-    DATABASE_URL: str = "postgresql+psycopg2://ticket_user:1234@localhost/ticket_system"
+    DATABASE_URL: str = "postgresql://ticket_user:1234@localhost:5432/ticket_system?client_encoding=utf8"
     REDIS_URL: str = "redis://localhost:6379/0"
     
     # Security
