@@ -1,7 +1,6 @@
-from sqlalchemy import Column, String, DateTime, Text, Boolean, Integer
+from sqlalchemy import Column, String, DateTime, Text, Boolean, Integer, Date, CHAR, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-import uuid
 
 from app.database import Base
 
@@ -9,21 +8,21 @@ from app.database import Base
 class Event(Base):
     __tablename__ = "events"
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    code = Column(String(50), unique=True, nullable=False, index=True)
-    name = Column(String(200), nullable=False)
+    id = Column(Integer, primary_key=True, index=True)
+    event_code = Column(String(20), unique=True, nullable=False, index=True)
+    title = Column(String(200), nullable=False)
     description = Column(Text)
-    location = Column(String(500))
-    start_date = Column(DateTime(timezone=True), nullable=False)
-    end_date = Column(DateTime(timezone=True), nullable=False)
     image_url = Column(String(500))
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
-    is_deleted = Column(Boolean, default=False, nullable=False)
-    max_tickets_per_order = Column(Integer, default=4)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    is_deleted = Column(CHAR(1), default='N', nullable=False)
+    created_by = Column(Integer, ForeignKey('super_admins.id'))
+    created_at = Column(DateTime, server_default=func.current_timestamp())
+    updated_at = Column(DateTime, server_default=func.current_timestamp())
     
     # Relationships
+    creator = relationship("SuperAdmin")
     managers = relationship("EventManager", back_populates="event", cascade="all, delete-orphan")
     products = relationship("Product", back_populates="event", cascade="all, delete-orphan")
     orders = relationship("Order", back_populates="event")
