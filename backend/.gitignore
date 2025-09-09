@@ -156,3 +156,9 @@ uploads/
 logs/
 *.db
 test.db
+
+venv/
+venv_linux/
+__pycache__/
+*.pyc
+.env

@@ -24,3 +24,6 @@ SELECT
 FROM information_schema.table_privileges 
 WHERE grantee = 'ticket_user' 
 ORDER BY table_name, privilege_type;
+
+admin1234 암호화된 비밀번호
+$2b$12$1Lu3u0TD8Iva58SXREqDmOtSp/6fYaM.7i7xh0zbWg99vqacxPT6i
