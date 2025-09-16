@@ -34,7 +34,7 @@ async def login(login_data: LoginSchema, db: Session = Depends(get_db)):
     # Create access token
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": admin.id, "type": "super_admin"},
+        data={"sub": str(admin.id), "type": "super_admin"},
         expires_delta=access_token_expires
     )
     
