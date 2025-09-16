@@ -14,7 +14,7 @@ class EventBase(BaseModel):
     is_active: bool = Field(default=True, description="활성화 여부")
 
 
-# Create schema (클라이언트용)
+# Create schema
 class EventCreate(EventBase):
     @validator('end_date')
     def validate_date_range(cls, v, values):
@@ -35,15 +35,6 @@ class EventCreate(EventBase):
         if not v.strip():
             raise ValueError('이벤트 제목은 필수입니다')
         return v.strip()
-
-
-# Internal Create schema (서버 내부용 - created_by 포함)
-class EventCreateInternal(EventCreate):
-    """서버 내부에서 사용하는 이벤트 생성 스키마 - created_by 필드 포함"""
-    created_by: int = Field(..., description="이벤트 생성자 ID")
-    
-    # EventCreate의 모든 validator를 상속받음
-    # 추가 validator가 필요하다면 여기에 정의
 
 
 # Update schema
