@@ -49,7 +49,7 @@ async def custom_exception_handler(request: Request, exc: CustomException):
 
 # Include routers
 from app.api.auth import super_admin, event_manager
-from app.api.super_admin import events as super_admin_events, product as super_admin_products
+from app.api.super_admin import events as super_admin_events
 from app.api.event_manager import products as event_manager_products
 from app.api.public import events as public_events
 
@@ -70,11 +70,6 @@ app.include_router(
     super_admin_events.router,
     prefix="/api/super-admin/events",
     tags=["Super Admin - Events"]
-)
-app.include_router(
-    super_admin_products.router,
-    prefix="/api/super-admin/products",
-    tags=["Super Admin - Products"]
 )
 
 # Event Manager routers
