@@ -12,7 +12,6 @@ from app.schemas.event import EventCreate, EventUpdate, EventResponse, EventList
 
 router = APIRouter()
 
-
 @router.get("/", response_model=EventListResponse)
 async def get_events(
     page: int = Query(1, ge=1, description="페이지 번호"),
