@@ -40,6 +40,11 @@ COMMENT ON COLUMN todos.is_deleted IS '삭제 여부 (Soft Delete)';
 COMMENT ON COLUMN todos.deleted_at IS '삭제 시간';
 
 
+INSERT INTO todos (title, description, priority, status, due_date, created_by) 
+VALUES 
+    ('프로젝트 기획서 작성', '다음 주 발표용 기획서 초안 작성', 'high', 'in_progress', '2024-12-25 18:00:00', 1),
+    ('코드 리뷰', '팀원들 PR 리뷰하기', 'medium', 'pending', '2024-12-23 12:00:00', 1),
+    ('회의 준비', '주간 회의 자료 준비', 'low', 'completed', '2024-12-22 10:00:00', 1);
 
 
 
