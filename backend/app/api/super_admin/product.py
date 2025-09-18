@@ -113,8 +113,8 @@ async def get_product(
 
 @router.put("/{product_id}", response_model=ProductResponse)
 async def update_product(
-    product_id: int = Path(..., description="상품 ID"),
     product_data: ProductUpdate,
+    product_id: int = Path(..., description="상품 ID"),
     db: Session = Depends(get_db),
     current_admin: SuperAdmin = Depends(get_current_super_admin)
 ):
@@ -187,8 +187,8 @@ async def delete_product(
 
 @router.post("/{product_id}/options", response_model=ProductOptionResponse, status_code=status.HTTP_201_CREATED)
 async def create_product_option(
-    product_id: int = Path(..., description="상품 ID"),
     option_data: ProductOptionCreate,
+    product_id: int = Path(..., description="상품 ID"),
     db: Session = Depends(get_db),
     current_admin: SuperAdmin = Depends(get_current_super_admin)
 ):
@@ -231,8 +231,8 @@ async def create_product_option(
 
 @router.put("/options/{option_id}", response_model=ProductOptionResponse)
 async def update_product_option(
-    option_id: int = Path(..., description="옵션 ID"),
     option_data: ProductOptionUpdate,
+    option_id: int = Path(..., description="옵션 ID"),
     db: Session = Depends(get_db),
     current_admin: SuperAdmin = Depends(get_current_super_admin)
 ):
