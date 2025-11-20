@@ -1,16 +1,22 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional
 from datetime import datetime
 
 class CustomerCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
-    phone: str = Field(..., pattern=r"^\d{3}-\d{3,4}-\d{4}$")
+    phone: str = Field(..., min_length=10, max_length=20)  # ✅ 유연하게
     password: str = Field(..., min_length=8)
     email: Optional[EmailStr] = None
+    
+    @field_validator('phone')
+    @classmethod
+    def normalize_phone(cls, v):
+        # 전화번호 정규화 (숫자만 추출)
+        return ''.join(filter(str.isdigit, v))
 
 class CustomerLogin(BaseModel):
-    phone : str
-    password : str
+    phone: str
+    password: str
 
 class CustomerResponse(BaseModel):
     id: int

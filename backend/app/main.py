@@ -52,6 +52,7 @@ from app.api.auth import super_admin, event_manager
 from app.api.super_admin import events as super_admin_events
 from app.api.event_manager import products as event_manager_products
 from app.api.public import events as public_events
+from app.api.public import customer as customer_events
 
 # Auth routers
 app.include_router(
@@ -84,6 +85,13 @@ app.include_router(
     public_events.router,
     prefix="/api/public/events",
     tags=["Public - Events"]
+)
+
+# Public customers
+app.include_router(
+    customer_events.router,
+    prefix="/api/customer",
+    tags=["Customer"]
 )
 
 

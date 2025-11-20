@@ -8,7 +8,7 @@ from app.schemas.auth import LoginSchema
 from app.core.security import verify_password, create_access_token
 from app.config import settings
 from app.models.super_admin import SuperAdmin
-from app.dependencies.auth import get_current_super_admin
+from app.dependencies import get_current_super_admin
 
 router = APIRouter()
 
