@@ -118,3 +118,103 @@ async def update_my_profile(
     db.refresh(current_customer)
     
     return current_customer
+
+@router.get('/me', response_model=CustomerResponse)
+async def get_my_profile(
+    current_customer: Customer = Depends(get_current_customer)
+):
+    """
+    내 정보 조회, get_current_customer로 인증된 사용자 정보 반환
+    """
+    return current_customer
+
+@router.post('/logout')
+async def logout(response:Response):
+    """
+    로그아웃
+    -쿠키에 저장된 access_token삭제
+    """
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+        secure=settings.ENVIRONMENT == "production",
+        samesite="strict"
+    )
+    return {"message": "Logout successful"}
+
+
+@router.post('/register', response_model=CustomerResponse, status_code=status.HTTP_201_CREATED)
+async def register(
+    customer_data:CustomerCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    회원가입
+    
+    1.전화번호 중복 체크
+    2. 이메일 중복 체크
+    3. 비밀번호 해시 처리
+    4. DB 저장
+    """
+    existing_phone = db.query(Customer).filter(
+        Customer.phone == customer_data.phone
+    ).first()
+
+    # 핸드폰 중복 체크
+    if existing_phone:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Phone number already registered"
+        )
+    
+    if customer_data.email:
+        existing_email = db.query(Customer).filter(
+            Customer.email == customer_data.email
+        ).first()
+        
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+    
+    password_hash = get_password_hash(customer_data.password)
+
+    new_customer = Customer(
+        name=customer_data.name,
+        phone=customer_data.phone,
+        password_hash=password_hash,
+        email=customer_data.email,
+        is_active=True,
+        is_verified=False,
+    )
+
+    db.add(new_customer)
+    db.commit()
+    db.refresh(new_customer)
+
+    return new_customer
+
+
+@router.delete('/me')
+async def delete_my_account(
+    current_customer : Customer = Depends(get_current_customer),
+    db: Session = Depends(get_db)
+):
+    """
+    회원탈퇴
+
+    실제 삭제가 아니라 is_active = False 처리
+    """
+
+    if not current_customer.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Account Alerady deactivated"
+        )
+    
+    current_customer.is_active = False
+
+    db.commit()
+
+    return {"message":"Account deactivated successfully"}

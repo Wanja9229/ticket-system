@@ -20,6 +20,6 @@ class Customer(Base):
     # locked_until = Column(DateTime, nullable=True)
     
     created_at = Column(DateTime, server_default=func.current_timestamp())
-    updated_at = Column(DateTime, onupdate=func.current_timestamp())
+    updated_at = Column(DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
     
     orders = relationship("Order", back_populates="customer")

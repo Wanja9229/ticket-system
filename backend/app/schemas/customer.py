@@ -18,6 +18,11 @@ class CustomerLogin(BaseModel):
     phone: str
     password: str
 
+    @field_validator('phone')
+    @classmethod
+    def normalize_phone(cls, v):
+        return ''.join(filter(str.isdigit, v))
+
 class CustomerResponse(BaseModel):
     id: int
     name: str
@@ -27,6 +32,7 @@ class CustomerResponse(BaseModel):
     is_verified: bool
     last_login: Optional[datetime]
     created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True

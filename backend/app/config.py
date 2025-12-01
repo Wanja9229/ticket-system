@@ -5,7 +5,7 @@ import os
 
 class Settings(BaseSettings):
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/ticket_system")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://ticket_user:1234@localhost:5432/ticket_system")
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     
     # Security

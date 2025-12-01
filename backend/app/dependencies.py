@@ -9,6 +9,7 @@ from app.config import settings
 from app.core.security import ALGORITHM
 from app.models.super_admin import SuperAdmin
 from app.models.event_manager import EventManager
+from app.models.customer import Customer
 
 
 def get_current_super_admin(
@@ -103,3 +104,41 @@ def get_redis_client():
     """Redis 클라이언트 의존성"""
     from app.core.redis_client import redis_client
     return redis_client
+
+
+def get_current_customer(
+    access_token: str = Cookie(...),
+    db: Session = Depends(get_db)
+) -> Customer:
+    """
+    현재 고객 가져오기
+    """
+    try:
+        payload = jwt.decode(access_token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+        customer_id: str = payload.get("sub")
+        
+        if customer_id is None or payload.get("type") != "customer":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid authentication credentials"
+            )
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid authentication credentials"
+        )
+    
+    customer = db.query(Customer).filter(Customer.id == customer_id).first()
+    if customer is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Customer not found"
+        )
+    
+    if not customer.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Customer account is disabled"
+        )
+    
+    return customer
