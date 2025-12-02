@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     
     # Server
     SERVER_HOST: str = "0.0.0.0"

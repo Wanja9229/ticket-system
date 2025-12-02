@@ -210,7 +210,7 @@ async def delete_my_account(
     if not current_customer.is_active:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Account Alerady deactivated"
+            detail="Account already deactivated"
         )
     
     current_customer.is_active = False

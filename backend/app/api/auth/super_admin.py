@@ -46,7 +46,7 @@ async def login(
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=True,
+        secure=settings.ENVIRONMENT == "production",  # ✅ 환경별 분기
         samesite="lax",
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         path="/"
@@ -84,7 +84,7 @@ async def logout(
     response.delete_cookie(
         key="access_token",
         path="/",
-        secure=True,
+        secure=settings.ENVIRONMENT == "production",  # ✅ 환경별 분기
         httponly=True,
         samesite="lax"
     )
